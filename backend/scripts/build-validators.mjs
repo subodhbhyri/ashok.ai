@@ -49,4 +49,7 @@ export const validatePlaybook: Validator;
 export const validateUiSnapshot: Validator;
 `,
 );
-console.log("Generated src/generated/validators.js");
+// The plan schema doubles as the Anthropic tool input_schema, so the two cannot drift.
+const { $schema, $id, ...planToolSchema } = plan;
+writeFileSync(join(outDir, "plan-tool-schema.json"), JSON.stringify(planToolSchema, null, 2));
+console.log("Generated src/generated/validators.js and plan-tool-schema.json");

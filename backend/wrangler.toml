@@ -1,3 +1,8 @@
 name = "ashok-backend"
 main = "src/index.ts"
 compatibility_date = "2026-10-01"
+
+# Not a secret. ANTHROPIC_API_KEY is: `wrangler secret put ANTHROPIC_API_KEY` for deploys, backend/.dev.vars (gitignored) for local runs.
+[[kv_namespaces]]
+binding = "KV"
+id = "3ef5e397201d4346bb9e44a8e47f6c3c"
