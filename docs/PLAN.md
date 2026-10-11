@@ -1,10 +1,10 @@
-# Screen Helper — End-to-End Build Plan
+# Ashok — End-to-End Build Plan
 
 Oct 10, 2026 · @Subodh
 
 ## Overview
 
-Screen Helper is a Windows tray app that answers "how do I…" questions by pointing at the exact button on screen, one step at a time, and checking each step on the device instead of calling an LLM after every click.
+Ashok is a Windows tray app that answers "how do I…" questions by pointing at the exact button on screen, one step at a time, and checking each step on the device instead of calling an LLM after every click.
 
 **Target user:** non-technical, anxious computer users (older adults first), plus anyone stuck on an unfamiliar OS task such as editing PATH.
 
@@ -33,6 +33,8 @@ The client does capture, matching, guiding and verification on the device; a sta
 
 The session engine is the only component that talks to the cloud, so swapping the model or going fully local later touches one interface (`IPlanner`).
 
+In text form: on the laptop, the ask panel, intent matcher, and playbooks + plan cache feed the session engine, which drives UI capture, the event watcher and the overlay. The engine's only outside call goes to the Worker proxy in the cloud, which calls Claude Haiku and returns the plan as JSON.
+
 | Layer | Choice | Why |
 | --- | --- | --- |
 | UI shell | WPF on .NET 10 | Tray icons and transparent, click-through overlay windows are first-class |
@@ -48,18 +50,18 @@ The session engine is the only component that talks to the cloud, so swapping th
 One monorepo with a .NET client, a TypeScript backend, playbooks as data, and an eval suite. Claude Code should treat `docs/PLAN.md` (an export of this doc) and `CLAUDE.md` as the source of truth.
 
 ```
-screen-helper/
+ashok.ai/
   CLAUDE.md                     # rules for Claude Code (see checklist)
   docs/PLAN.md                  # this plan, exported
   docs/contracts/               # JSON Schemas: ui-snapshot, plan, playbook
   client/
-    ScreenHelper.sln
-    src/ScreenHelper.App/       # WPF: tray icon, ask panel, overlay window, DI wiring
-    src/ScreenHelper.Core/      # session state machine, contracts, playbook engine, planner client interface
-    src/ScreenHelper.Windows/   # UI Automation capture (FlaUI), event watcher, redaction, DPI math
-    src/ScreenHelper.Speech/    # push-to-talk STT, text-to-speech
-    tests/ScreenHelper.Core.Tests/
-    tests/ScreenHelper.Windows.Tests/   # integration tests, tagged [Trait("Category","Desktop")]
+    Ashok.sln
+    src/Ashok.App/              # WPF: tray icon, ask panel, overlay window, DI wiring
+    src/Ashok.Core/             # session state machine, contracts, playbook engine, planner client interface
+    src/Ashok.Windows/          # UI Automation capture (FlaUI), event watcher, redaction, DPI math
+    src/Ashok.Speech/           # push-to-talk STT, text-to-speech
+    tests/Ashok.Core.Tests/
+    tests/Ashok.Windows.Tests/  # integration tests, tagged [Trait("Category","Desktop")]
   playbooks/                    # one YAML file per task
   backend/                      # Cloudflare Worker, TypeScript + Hono
     src/index.ts  src/planner.ts  src/schema.ts
@@ -70,7 +72,7 @@ screen-helper/
 
 **Conventions Claude Code must follow**
 
-- `ScreenHelper.Core` has no Windows references, so the session logic is unit-testable on any OS.
+- `Ashok.Core` has no Windows references, so the session logic is unit-testable on any OS.
 - Every LLM response is validated against `docs/contracts/plan.schema.json` before use; invalid output triggers one retry, then a graceful "I'm not sure" message.
 - The app never clicks or types on the user's behalf.
 - One phase per branch and pull request; each phase ends with its acceptance criteria passing.
@@ -173,9 +175,9 @@ Eight phases, each a branch and PR; playbooks work fully offline by the end of P
 
 ### Phase 1 — UI capture
 
-- [ ] `UiaCapture` in `ScreenHelper.Windows` using FlaUI (UIA3): walk the foreground window, keep visible and interactive elements, emit the snapshot contract.
+- [ ] `UiaCapture` in `Ashok.Windows` using FlaUI (UIA3): walk the foreground window, keep visible and interactive elements, emit the snapshot contract.
 - [ ] Redaction: drop password fields, strip edit-field values, skip windows from a sensitive-process list (browsers on banking domains are out of scope; just skip edit values).
-- [ ] Dev CLI: `ScreenHelper.DevTool snapshot --delay 3` writes JSON to `eval/snapshots/`.
+- [ ] Dev CLI: `Ashok.DevTool snapshot --delay 3` writes JSON to `eval/snapshots/`.
 - [ ] Element ranking and trimming (Opus supplies the heuristic).
 
 **Done when:** snapshots of Settings, File Explorer, Control Panel and a Chrome window each stay under 150 elements, contain no field values, and capture in under 300 ms.
@@ -286,7 +288,7 @@ The biggest prerequisite is a Windows machine to develop on: UI Automation code 
 
 - [x] Confirm your dad's laptop runs Windows 10 or 11.
 - [ ] Windows 11 dev machine, plus a second clean Windows VM for scaling and install tests.
-- [ ] .NET 10 SDK, Node.js LTS, Git, and Wrangler (`npm i -g wrangler`).
+- [ ] .NET 10 SDK, Node.js LTS and Git. Wrangler is installed per project in `backend/` during Phase 0 and run with `npx wrangler`.
 - [ ] VS Code with the C# Dev Kit extension, and Claude Code set to Sonnet.
 - [ ] Accessibility Insights for Windows, to inspect UI Automation trees while writing playbooks.
 
@@ -294,7 +296,7 @@ The biggest prerequisite is a Windows machine to develop on: UI Automation code 
 
 - [x] Anthropic Console API key with a monthly spend limit.
 - [ ] Cloudflare account for Workers.
-- [ ] Public GitHub repo `screen-helper` with an MIT license and a `.gitignore` that covers `.dev.vars`, `bin/`, `obj/` and `node_modules/`. Because the repo is public, the API key goes only in `wrangler secret put` and `.dev.vars`, never in code.
+- [ ] Public GitHub repo `ashok.ai` with an MIT license and a `.gitignore` that covers `.dev.vars`, `bin/`, `obj/` and `node_modules/`. Because the repo is public, the API key goes only in `wrangler secret put` and `.dev.vars`, never in code.
 
 **Seed the repo**
 
@@ -302,12 +304,12 @@ The biggest prerequisite is a Windows machine to develop on: UI Automation code 
 - [ ] Add this `CLAUDE.md` at the root:
 
 ```markdown
-# Screen Helper — rules for Claude Code
+# Ashok — rules for Claude Code
 
 Read docs/PLAN.md before any task. Work one phase at a time, on a branch named phase-N-<topic>.
 
 - Follow the contracts in docs/contracts/ exactly; change a schema only if the task says so.
-- ScreenHelper.Core must not reference Windows APIs.
+- Ashok.Core must not reference Windows APIs.
 - The app never clicks or types for the user.
 - Validate every LLM response against plan.schema.json.
 - Never commit secrets. The API key exists only in the Worker environment.

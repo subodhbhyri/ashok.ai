@@ -1,9 +1,9 @@
-# Screen Helper — rules for Claude Code
+# Ashok — rules for Claude Code
 
 Read docs/PLAN.md before any task. Work one phase at a time, on a branch named phase-N-<topic>.
 
 - Follow the contracts in docs/contracts/ exactly; change a schema only if the task says so.
-- ScreenHelper.Core must not reference Windows APIs.
+- Ashok.Core must not reference Windows APIs.
 - The app never clicks or types for the user.
 - Validate every LLM response against plan.schema.json.
 - Never commit secrets. The API key exists only in the Worker environment.
