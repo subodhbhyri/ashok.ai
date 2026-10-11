@@ -1,0 +1,2 @@
+{ "os": { "edition": "Windows 11", "build": "22631" }, "foreground": { "process": "chrome", "title": "Sign in" },
+  "elements": [ { "ref": "e1", "role": "Edit", "name": "Email", "value": "me@example.com", "bounds": [0, 0, 100, 20], "enabled": true } ], "redacted": 0, "truncated": false }

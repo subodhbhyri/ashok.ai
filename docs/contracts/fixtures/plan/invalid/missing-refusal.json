@@ -1,0 +1,2 @@
+{ "intent": "x", "steps": [ { "id": "s1", "say": "Look.", "action": "observe", "doneWhen": { "kind": "userConfirms" } } ],
+  "confidence": 0.5, "needsScreenshot": false }

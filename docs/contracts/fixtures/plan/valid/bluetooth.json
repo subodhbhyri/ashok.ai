@@ -1,0 +1,14 @@
+{
+  "intent": "turn_on_bluetooth",
+  "steps": [
+    { "id": "s1", "say": "Click Bluetooth & devices on the left.", "action": "click",
+      "target": { "ref": "e12", "role": "ListItem", "name": "Bluetooth & devices" },
+      "doneWhen": { "kind": "elementVisible", "target": { "role": "Button", "name": "Bluetooth" } } },
+    { "id": "s2", "say": "Turn the Bluetooth switch on.", "action": "click",
+      "target": { "role": "Button", "name": "Bluetooth" },
+      "doneWhen": { "kind": "toggleState", "target": { "role": "Button", "name": "Bluetooth" }, "state": "on" } }
+  ],
+  "confidence": 0.85,
+  "needsScreenshot": false,
+  "refusal": null
+}

@@ -1,0 +1,1 @@
+{ "id": "x", "title": "X", "os": ["win11"], "examples": [], "steps": [ { "id": "s1", "say": "Look.", "action": "observe", "doneWhen": { "kind": "userConfirms" } } ] }

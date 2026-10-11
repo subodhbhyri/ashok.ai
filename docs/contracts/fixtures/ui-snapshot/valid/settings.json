@@ -1,0 +1,10 @@
+{
+  "os": { "edition": "Windows 11", "build": "22631" },
+  "foreground": { "process": "SystemSettings", "title": "Settings" },
+  "elements": [
+    { "ref": "e12", "role": "ListItem", "name": "Bluetooth & devices", "automationId": "SettingsPageGroupDevices", "bounds": [24, 310, 260, 40], "enabled": true, "toggle": null },
+    { "ref": "e13", "role": "Button", "name": "Bluetooth", "bounds": [400, 200, 60, 30], "enabled": true, "toggle": "off" }
+  ],
+  "redacted": 2,
+  "truncated": false
+}

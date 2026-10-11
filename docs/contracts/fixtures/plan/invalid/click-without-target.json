@@ -1,0 +1,2 @@
+{ "intent": "x", "steps": [ { "id": "s1", "say": "Click.", "action": "click", "doneWhen": { "kind": "userConfirms" } } ],
+  "confidence": 0.5, "needsScreenshot": false, "refusal": null }
