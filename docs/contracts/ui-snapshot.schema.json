@@ -1,0 +1,62 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://ashok.ai/schemas/ui-snapshot.schema.json",
+  "title": "UI snapshot",
+  "description": "Trimmed, redacted view of the foreground window (client -> planner). Edit-field values are never included; password fields are dropped entirely.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["os", "foreground", "elements", "redacted", "truncated"],
+  "properties": {
+    "os": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["edition", "build"],
+      "properties": {
+        "edition": { "type": "string", "minLength": 1 },
+        "build": { "type": "string", "minLength": 1 }
+      }
+    },
+    "foreground": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["process", "title"],
+      "properties": {
+        "process": { "type": "string", "minLength": 1 },
+        "title": { "type": "string" }
+      }
+    },
+    "elements": {
+      "type": "array",
+      "maxItems": 150,
+      "items": { "$ref": "#/$defs/element" }
+    },
+    "redacted": { "type": "integer", "minimum": 0 },
+    "truncated": { "type": "boolean" }
+  },
+  "$defs": {
+    "element": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["ref", "role", "name", "bounds", "enabled"],
+      "properties": {
+        "ref": {
+          "description": "Only valid for this snapshot.",
+          "type": "string",
+          "pattern": "^e[0-9]+$"
+        },
+        "role": { "type": "string", "minLength": 1 },
+        "name": { "type": "string" },
+        "automationId": { "type": "string" },
+        "bounds": {
+          "description": "[x, y, width, height] in physical screen pixels.",
+          "type": "array",
+          "minItems": 4,
+          "maxItems": 4,
+          "items": { "type": "integer" }
+        },
+        "enabled": { "type": "boolean" },
+        "toggle": { "enum": ["on", "off", "indeterminate", null] }
+      }
+    }
+  }
+}

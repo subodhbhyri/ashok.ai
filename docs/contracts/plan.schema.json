@@ -1,0 +1,102 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://ashok.ai/schemas/plan.schema.json",
+  "title": "Plan",
+  "description": "Planner -> client. Actions describe what the USER does; the app never performs them.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["intent", "steps", "confidence", "needsScreenshot", "refusal"],
+  "properties": {
+    "intent": { "type": "string", "pattern": "^[a-z0-9_]+$" },
+    "steps": { "type": "array", "items": { "$ref": "#/$defs/step" } },
+    "confidence": { "type": "number", "minimum": 0, "maximum": 1 },
+    "needsScreenshot": { "type": "boolean" },
+    "refusal": {
+      "description": "Kind explanation, set when the task touches passwords, payments or anything the safety rules block.",
+      "type": ["string", "null"],
+      "minLength": 1
+    }
+  },
+  "if": { "properties": { "refusal": { "type": "null" } } },
+  "then": { "properties": { "steps": { "type": "array", "minItems": 1 } } },
+  "else": { "properties": { "steps": { "type": "array", "maxItems": 0 } } },
+  "$defs": {
+    "target": {
+      "description": "Targets on the current screen carry ref; targets on screens not yet open carry only role + name (+ optional automationId).",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["role", "name"],
+      "properties": {
+        "ref": { "type": "string", "pattern": "^e[0-9]+$" },
+        "role": { "type": "string", "minLength": 1 },
+        "name": { "type": "string", "minLength": 1 },
+        "automationId": { "type": "string", "minLength": 1 }
+      }
+    },
+    "doneWhen": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind"],
+          "properties": {
+            "kind": { "const": "windowOpened" },
+            "process": { "type": "string", "minLength": 1 },
+            "title": { "type": "string", "minLength": 1 }
+          },
+          "anyOf": [{ "required": ["process"] }, { "required": ["title"] }]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "target"],
+          "properties": {
+            "kind": { "enum": ["elementVisible", "elementGone", "focusOn"] },
+            "target": { "$ref": "#/$defs/target" }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "target", "state"],
+          "properties": {
+            "kind": { "const": "toggleState" },
+            "target": { "$ref": "#/$defs/target" },
+            "state": { "enum": ["on", "off"] }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind"],
+          "properties": { "kind": { "const": "userConfirms" } }
+        }
+      ]
+    },
+    "step": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "say", "action", "doneWhen"],
+      "properties": {
+        "id": { "type": "string", "pattern": "^s[0-9]+$" },
+        "say": { "type": "string", "minLength": 1 },
+        "action": {
+          "enum": ["click", "doubleClick", "rightClick", "type", "pressKeys", "observe"]
+        },
+        "target": { "$ref": "#/$defs/target" },
+        "keys": { "type": "string", "minLength": 1 },
+        "doneWhen": { "$ref": "#/$defs/doneWhen" }
+      },
+      "allOf": [
+        {
+          "if": { "properties": { "action": { "enum": ["click", "doubleClick", "rightClick", "type"] } } },
+          "then": { "required": ["target"] }
+        },
+        {
+          "if": { "properties": { "action": { "const": "pressKeys" } } },
+          "then": { "required": ["keys"] }
+        }
+      ]
+    }
+  }
+}

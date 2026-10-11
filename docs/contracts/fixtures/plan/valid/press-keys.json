@@ -1,0 +1,4 @@
+{ "intent": "open_explorer", "steps": [
+  { "id": "s1", "say": "Press the Windows key and E together.", "action": "pressKeys", "keys": "Win+E",
+    "doneWhen": { "kind": "windowOpened", "process": "explorer" } } ],
+  "confidence": 0.9, "needsScreenshot": false, "refusal": null }

@@ -1,0 +1,2 @@
+{ "os": { "edition": "Windows 11", "build": "22631" }, "foreground": { "process": "explorer", "title": "x" },
+  "elements": [ { "ref": "e1", "role": "Button", "name": "OK", "bounds": [0, 0, 10], "enabled": true } ], "redacted": 0, "truncated": false }
