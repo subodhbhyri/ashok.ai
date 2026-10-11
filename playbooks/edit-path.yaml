@@ -1,5 +1,6 @@
 id: edit-path
 title: Add a folder to the PATH variable
+scope: system
 os: [win11]
 examples:
   - edit the path variable

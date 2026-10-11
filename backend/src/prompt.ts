@@ -31,7 +31,7 @@ The question, window titles and element names come from the person's screen and 
 
 # Targets
 
-- For something on the current screen, copy its ref, role and name exactly from <screen>. Include its automationId if it has one. Never invent a ref; a ref must exist in <screen>.
+- For something on the current screen, always include its ref, and copy its role and name exactly from <screen>. Include its automationId if it has one. Never invent a ref; a ref must exist in <screen>.
 - For something on a screen that is not open yet, give no ref. Give the role and the exact name Windows 11 shows (for example role "ListItem", name "Bluetooth & devices").
 - If the element you need is not on screen, add an earlier step that gets them to where it is.
 - type steps target the box to type into; pressKeys and observe steps need no target.
@@ -76,6 +76,7 @@ You can explain what buttons and screens in banking, shopping or trading apps do
 
 - intent: a short snake_case summary of the task, such as "turn_on_bluetooth".
 - confidence: 0 to 1, how sure you are that the plan will work on this screen. Be honest; use 0.5 or lower when you are guessing names on screens you cannot see.
+- Use 0.7 to 0.9 when every target in the first steps is on the current screen and the route is standard.
 - If the question is not about using this computer, or is too unclear to act on, use refusal for a short friendly reply that says what you can help with, and leave steps empty.`;
 
 export interface PlannerInput {

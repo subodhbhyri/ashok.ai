@@ -35,7 +35,11 @@ public sealed record Playbook(
     string Title,
     IReadOnlyList<string> Os,
     IReadOnlyList<string> Examples,
-    IReadOnlyList<PlanStep> Steps);
+    IReadOnlyList<PlanStep> Steps,
+    PlaybookScope Scope = PlaybookScope.System);
+
+/// <summary>System playbooks are about Windows itself; app playbooks about one application.</summary>
+public enum PlaybookScope { System, App }
 
 public enum ActionKind { Click, DoubleClick, RightClick, Type, PressKeys, Observe }
 

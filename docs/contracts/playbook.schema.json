@@ -5,10 +5,14 @@
   "description": "A playbook file from playbooks/ (YAML), as parsed to JSON. Same step schema as a plan, but targets never carry a ref (refs are only valid inside one snapshot).",
   "type": "object",
   "additionalProperties": false,
-  "required": ["id", "title", "os", "examples", "steps"],
+  "required": ["id", "title", "scope", "os", "examples", "steps"],
   "properties": {
     "id": { "type": "string", "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$" },
     "title": { "type": "string", "minLength": 1 },
+    "scope": {
+      "description": "system: about Windows itself (Settings, Explorer, desktop); only used over the user's own app when the match is very close. app: about one specific application.",
+      "enum": ["system", "app"]
+    },
     "os": {
       "type": "array",
       "minItems": 1,

@@ -1,0 +1,14 @@
+{
+  "id": "find-downloads",
+  "title": "Find your downloaded files",
+  "scope": "everywhere",
+  "os": ["win10", "win11"],
+  "examples": ["where are my downloads", "I can't find the file I downloaded"],
+  "steps": [
+    { "id": "s1", "say": "Press the Windows key and E together to open File Explorer.", "action": "pressKeys", "keys": "Win+E",
+      "doneWhen": { "kind": "windowOpened", "process": "explorer" } },
+    { "id": "s2", "say": "Click Downloads on the left side.", "action": "click",
+      "target": { "role": "TreeItem", "name": "Downloads" },
+      "doneWhen": { "kind": "elementVisible", "target": { "role": "Text", "name": "Downloads" } } }
+  ]
+}

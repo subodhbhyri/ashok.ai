@@ -38,6 +38,12 @@ public sealed class GuidanceSession(
     public const string LostMessage =
         "I've lost track of where we are. It might be best to ask someone you trust.";
 
+    /// <summary>
+    /// When the user is inside a regular app, a system playbook is used only for a match at least this close;
+    /// a weaker one goes to the planner, which can see the app. Explorer, Settings and the desktop keep the matcher's threshold.
+    /// </summary>
+    public const double AppWindowMinScore = 0.75;
+
     public const string DoneMessage = "All done. Well done!";
 
     private sealed class StepRun(DateTimeOffset startedAt)
@@ -83,6 +89,17 @@ public sealed class GuidanceSession(
         var match = matcher.Match(question);
         var playbook = match is null ? null : playbooks.Find(match.PlaybookId);
 
+        // The planner needs to see the window the user asked about, which is not Ashok's own panel.
+        // AskAsync already runs off the UI thread (SessionRunner). The capture is skipped when a playbook
+        // clearly wins: otherwise it also tells us whether the user is inside one of their own apps.
+        CapturedScreen? screen = null;
+        if (playbook is null || NeedsAppCheck(playbook, match!))
+        {
+            screen = CapturePreviousWindow(previousWindow);
+            if (playbook is not null && screen is not null && SystemSurfaces.IsRegularApp(screen.Foreground.Process))
+                playbook = null; // a system playbook must not override the app the user is in
+        }
+
         lock (_gate)
         {
             if (epoch != _epoch) return;
@@ -92,11 +109,11 @@ public sealed class GuidanceSession(
                 return;
             }
         }
-
-        // The planner needs to see the window the user asked about, which is not Ashok's own panel.
-        var screen = CapturePreviousWindow(previousWindow); // AskAsync already runs off the UI thread (SessionRunner)
         await ReplanAsync(PlanReason.New, epoch, screen);
     }
+
+    private static bool NeedsAppCheck(Playbook playbook, IntentMatch match) =>
+        playbook.Scope == PlaybookScope.System && match.Score < AppWindowMinScore;
 
     private CapturedScreen? CapturePreviousWindow(long previousWindow)
     {

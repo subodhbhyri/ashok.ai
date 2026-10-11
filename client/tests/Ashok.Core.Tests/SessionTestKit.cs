@@ -71,8 +71,10 @@ internal sealed class FakeView : ISessionView
 
 internal sealed class FakeMatcher(params (string Question, string PlaybookId)[] known) : IIntentMatcher
 {
+    public double Score { get; set; } = 0.9;
+
     public IntentMatch? Match(string question) =>
-        known.FirstOrDefault(k => k.Question == question) is { PlaybookId: { } id } ? new IntentMatch(id, 0.9) : null;
+        known.FirstOrDefault(k => k.Question == question) is { PlaybookId: { } id } ? new IntentMatch(id, Score) : null;
 }
 
 /// <summary>Windows by handle plus a current foreground; a handle not in the table is a window that is gone.</summary>
@@ -139,6 +141,8 @@ internal static class Steps
     public static DoneWhen Confirm() => new(DoneKind.UserConfirms, null, null, null, null);
 
     public static Playbook Book(string id, params PlanStep[] steps) => new(id, id, ["win11"], ["example"], steps);
+
+    public static Playbook AppBook(string id, params PlanStep[] steps) => Book(id, steps) with { Scope = PlaybookScope.App };
 }
 
 /// <summary>A session wired to fakes, with a clock the test controls.</summary>

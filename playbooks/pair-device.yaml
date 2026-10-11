@@ -1,5 +1,6 @@
 id: pair-device
 title: Pair a Bluetooth device
+scope: system
 os: [win11]
 examples:
   - pair a bluetooth device

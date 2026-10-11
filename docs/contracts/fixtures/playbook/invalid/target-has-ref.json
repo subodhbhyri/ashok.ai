@@ -1,2 +1,2 @@
-{ "id": "x", "title": "X", "os": ["win11"], "examples": ["x"], "steps": [
+{ "id": "x", "title": "X", "scope": "system", "os": ["win11"], "examples": ["x"], "steps": [
   { "id": "s1", "say": "Click.", "action": "click", "target": { "ref": "e1", "role": "Button", "name": "OK" }, "doneWhen": { "kind": "userConfirms" } } ] }

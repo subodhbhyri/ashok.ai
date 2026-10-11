@@ -1,5 +1,6 @@
 id: uninstall-app
 title: Uninstall an app
+scope: system
 os: [win11]
 examples:
   - uninstall a program
