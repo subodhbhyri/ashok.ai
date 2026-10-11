@@ -7,6 +7,9 @@ examples:
   - how do I connect a bluetooth speaker
   - add a bluetooth mouse
   - connect wireless earbuds to my computer
+  - connect my wireless keyboard
+  - connect my bluetooth mouse
+  - pair my headphones
 steps:
   - id: s1
     say: Press the Windows key and the letter I together to open Settings.
