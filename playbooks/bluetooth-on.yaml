@@ -1,0 +1,30 @@
+id: bluetooth-on
+title: Turn Bluetooth on
+os: [win11]
+examples:
+  - turn on bluetooth
+  - how do I switch bluetooth on
+  - my bluetooth is off
+  - enable bluetooth on my computer
+  - bluetooth is not working
+steps:
+  - id: s1
+    say: Press the Windows key and the letter I together to open Settings.
+    action: pressKeys
+    keys: Win+I
+    doneWhen: { kind: elementVisible, target: { role: ListItem, name: "Bluetooth & devices" } }
+  - id: s2
+    say: Click Bluetooth and devices on the left.
+    action: click
+    target: { role: ListItem, name: "Bluetooth & devices" }
+    doneWhen:
+      kind: elementVisible
+      target: { role: Button, name: Bluetooth, automationId: SystemSettings_Device_BluetoothRadioToggle_ToggleSwitch }
+  - id: s3
+    say: Click the Bluetooth switch at the top so it says On.
+    action: click
+    target: { role: Button, name: Bluetooth, automationId: SystemSettings_Device_BluetoothRadioToggle_ToggleSwitch }
+    doneWhen:
+      kind: toggleState
+      target: { role: Button, name: Bluetooth, automationId: SystemSettings_Device_BluetoothRadioToggle_ToggleSwitch }
+      state: "on"

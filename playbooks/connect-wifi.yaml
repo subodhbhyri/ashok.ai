@@ -1,0 +1,44 @@
+id: connect-wifi
+title: Connect to Wi-Fi
+os: [win11]
+examples:
+  - connect to wifi
+  - how do I join a wireless network
+  - I cannot get on the internet
+  - connect to my home wifi
+  - find wifi networks
+steps:
+  - id: s1
+    say: Press the Windows key and the letter I together to open Settings.
+    action: pressKeys
+    keys: Win+I
+    doneWhen: { kind: elementVisible, target: { role: ListItem, name: "Network & internet" } }
+  - id: s2
+    say: Click Network and internet on the left.
+    action: click
+    target: { role: ListItem, name: "Network & internet" }
+    doneWhen: { kind: elementVisible, target: { role: ListItem, name: Wi-Fi } }
+  - id: s3
+    say: Click Wi-Fi.
+    action: click
+    target: { role: ListItem, name: Wi-Fi }
+    doneWhen:
+      kind: elementVisible
+      target: { role: Button, name: Wi-Fi, automationId: SystemSettings_Connections_Adapter_Wi-Fi_Wi-Fi_RadioToggle }
+  - id: s4
+    say: Make sure the Wi-Fi switch says On. Click it if it does not.
+    action: click
+    target: { role: Button, name: Wi-Fi, automationId: SystemSettings_Connections_Adapter_Wi-Fi_Wi-Fi_RadioToggle }
+    doneWhen:
+      kind: toggleState
+      target: { role: Button, name: Wi-Fi, automationId: SystemSettings_Connections_Adapter_Wi-Fi_Wi-Fi_RadioToggle }
+      state: "on"
+  - id: s5
+    say: Click Show available networks. Press Done when you can see a list of networks.
+    action: click
+    target: { role: Text, name: Show available networks }
+    doneWhen: { kind: userConfirms }
+  - id: s6
+    say: Click your network name, then click Connect. If it asks for a password, type it yourself. Press Done when you are connected.
+    action: observe
+    doneWhen: { kind: userConfirms }

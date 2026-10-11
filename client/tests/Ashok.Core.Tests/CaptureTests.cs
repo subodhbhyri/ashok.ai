@@ -51,6 +51,29 @@ public class RedactionTests
         Assert.Equal(80, Assert.Single(r.Candidates).Name.Length);
     }
 
+    [Theory]
+    [InlineData("Text")]
+    [InlineData("Edit")]
+    public void Classic_list_cells_are_dropped_because_their_name_is_their_value(string role)
+    {
+        // Environment Variables dialog: a variable's value (or a PATH entry) is the element's name.
+        var secretValue = new RawElement(role, "C:/Users/someone/secret-token-123", "ListViewSubItem-1", 5, 6, 10, 10, true, null, false, false);
+        var button = Raw("Button", "Edit...");
+
+        var result = Redaction.Apply([secretValue, button]);
+
+        Assert.Equal("Edit...", Assert.Single(result.Candidates).Name);
+        Assert.Equal(1, result.Redacted);
+    }
+
+    [Fact]
+    public void List_items_keep_their_names_so_rows_can_still_be_targeted()
+    {
+        var row = new RawElement("ListItem", "Path", "ListViewItem-5", 5, 6, 10, 10, true, null, false, false);
+
+        Assert.Single(Redaction.Apply([row]).Candidates);
+    }
+
     [Fact]
     public void Email_addresses_are_masked_in_names() =>
         Assert.Equal("Subodh Bhyri [email]",

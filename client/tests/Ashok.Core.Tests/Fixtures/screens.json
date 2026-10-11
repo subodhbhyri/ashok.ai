@@ -1,0 +1,116 @@
+{
+  "note": "Only the elements playbooks point at, copied from real Windows 11 (build 26300) captures made with Ashok.DevTool. No device names, networks, accounts or values.",
+  "screens": {
+    "settings-nav": [
+      { "role": "ListItem", "name": "Home" },
+      { "role": "ListItem", "name": "System" },
+      { "role": "ListItem", "name": "Bluetooth & devices" },
+      { "role": "ListItem", "name": "Network & internet" },
+      { "role": "ListItem", "name": "Personalization" },
+      { "role": "ListItem", "name": "Apps" },
+      { "role": "ListItem", "name": "Accounts" },
+      { "role": "Edit", "name": "Search box, Find a setting", "automationId": "CommandSearchTextBox" }
+    ],
+    "bluetooth-page": [
+      { "role": "ListItem", "name": "Bluetooth & devices" },
+      { "role": "Button", "name": "Bluetooth & devices" },
+      { "role": "Button", "name": "Bluetooth", "automationId": "SystemSettings_Device_BluetoothRadioToggle_ToggleSwitch", "toggle": "off" },
+      { "role": "Button", "name": "Add device", "automationId": "SystemSettings_Device_Discovery_Button" },
+      { "role": "Text", "name": "Add device" }
+    ],
+    "bluetooth-page-on": [
+      { "role": "Button", "name": "Bluetooth", "automationId": "SystemSettings_Device_BluetoothRadioToggle_ToggleSwitch", "toggle": "on" }
+    ],
+    "add-device-dialog": [
+      { "role": "Button", "name": "Bluetooth", "automationId": "BluetoothDevicesButton" },
+      { "role": "Button", "name": "Wireless display or dock", "automationId": "DisplayDevicesButton" },
+      { "role": "Button", "name": "Everything else", "automationId": "OtherDevicesButton" },
+      { "role": "Button", "name": "Cancel", "automationId": "ButtonClose" }
+    ],
+    "network-page": [
+      { "role": "ListItem", "name": "Network & internet" },
+      { "role": "ListItem", "name": "Wi-Fi" },
+      { "role": "ListItem", "name": "Ethernet" },
+      { "role": "Button", "name": "Wi-Fi", "automationId": "SystemSettings_Network_Wifi_QuickAction_ToggleSwitch", "toggle": "on" }
+    ],
+    "wifi-page": [
+      { "role": "ListItem", "name": "Wi-Fi" },
+      { "role": "Button", "name": "Wi-Fi" },
+      { "role": "Button", "name": "Wi-Fi", "automationId": "SystemSettings_Connections_Adapter_Wi-Fi_Wi-Fi_RadioToggle", "toggle": "on" },
+      { "role": "Text", "name": "Show available networks" },
+      { "role": "Text", "name": "Manage known networks" }
+    ],
+    "explorer-folder": [
+      { "role": "TreeItem", "name": "Home" },
+      { "role": "TreeItem", "name": "Gallery" },
+      { "role": "TreeItem", "name": "Start of Quick Access - Downloads (pinned)" },
+      { "role": "TreeItem", "name": "Desktop (pinned)" },
+      { "role": "TabItem", "name": "Downloads" },
+      { "role": "Text", "name": "Downloads" },
+      { "role": "SplitButton", "name": "Downloads", "automationId": "FirstCrumbStackPanel" }
+    ],
+    "system-page": [
+      { "role": "ListItem", "name": "System" },
+      { "role": "ListItem", "name": "Display" },
+      { "role": "ListItem", "name": "Sound" },
+      { "role": "ListItem", "name": "Notifications" }
+    ],
+    "sound-page": [
+      { "role": "Slider", "name": "Adjust the output volume", "automationId": "SystemSettings_Audio_Output_VolumeValue_Slider" },
+      { "role": "Button", "name": "Mute volume" },
+      { "role": "Text", "name": "Volume" }
+    ],
+    "display-page": [
+      { "role": "Button", "name": "Detect", "automationId": "SystemSettings_Display_Detect_Button" },
+      { "role": "ComboBox", "name": "Multiple displays", "automationId": "SystemSettings_Display_Duplicate_ComboBox" },
+      { "role": "Button", "name": "Identify", "automationId": "SystemSettings_Display_MonitorActions_Identify_Button" }
+    ],
+    "display-page-scrolled": [
+      { "role": "ComboBox", "name": "Scale", "automationId": "SystemSettings_Display_Scaling_ItemSizeOverride_ComboBox" },
+      { "role": "ComboBox", "name": "Display resolution", "automationId": "SystemSettings_Display_Resolution_ComboBox" }
+    ],
+    "apps-page": [
+      { "role": "ListItem", "name": "Apps" },
+      { "role": "ListItem", "name": "Installed apps" },
+      { "role": "ListItem", "name": "Default apps" },
+      { "role": "ListItem", "name": "Startup" }
+    ],
+    "installed-apps": [
+      { "role": "Edit", "name": "Search", "automationId": "SystemSettings_StorageSense_AppSizesListFilter_DisplayStringValue" },
+      { "role": "Button", "name": "More options", "automationId": "AppOptionsButton" }
+    ],
+    "installed-apps-menu": [
+      { "role": "MenuItem", "name": "Advanced options" },
+      { "role": "MenuItem", "name": "Move", "automationId": "SystemSettings_StorageSense_AppSizesList_MoveButton_MoveButton" },
+      { "role": "MenuItem", "name": "Uninstall", "automationId": "SystemSettings_StorageSense_AppSizesList_UninstallButton_UninstallButton" }
+    ],
+    "run-dialog": [
+      { "role": "ComboBox", "name": "Open:", "automationId": "12298" },
+      { "role": "Edit", "name": "Open:", "automationId": "1001" },
+      { "role": "Button", "name": "OK", "automationId": "1" },
+      { "role": "Button", "name": "Cancel", "automationId": "2" },
+      { "role": "Button", "name": "Browse...", "automationId": "12288" }
+    ],
+    "environment-variables": [
+      { "role": "ListItem", "name": "Path", "automationId": "ListViewItem-5" },
+      { "role": "Button", "name": "New...", "automationId": "412" },
+      { "role": "Button", "name": "Edit...", "automationId": "413" },
+      { "role": "Button", "name": "Delete", "automationId": "414" },
+      { "role": "Button", "name": "New...", "automationId": "407" },
+      { "role": "Button", "name": "Edit...", "automationId": "408" },
+      { "role": "Button", "name": "OK", "automationId": "1" },
+      { "role": "Button", "name": "Cancel", "automationId": "2" }
+    ],
+    "edit-environment-variable": [
+      { "role": "Button", "name": "New", "automationId": "111" },
+      { "role": "Button", "name": "Edit", "automationId": "112" },
+      { "role": "Button", "name": "Browse...", "automationId": "113" },
+      { "role": "Button", "name": "Delete", "automationId": "114" },
+      { "role": "Button", "name": "Move Up", "automationId": "115" },
+      { "role": "Button", "name": "Move Down", "automationId": "116" },
+      { "role": "Button", "name": "Edit text...", "automationId": "117" },
+      { "role": "Button", "name": "OK", "automationId": "1" },
+      { "role": "Button", "name": "Cancel", "automationId": "2" }
+    ]
+  }
+}

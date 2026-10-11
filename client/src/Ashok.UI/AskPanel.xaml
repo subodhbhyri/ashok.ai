@@ -13,13 +13,30 @@
         MouseLeftButtonDown="OnDrag">
     <Border BorderBrush="#1A4FA0" BorderThickness="4" Padding="24">
         <StackPanel>
-            <TextBlock Text="What do you need help with?" FontWeight="SemiBold" Margin="0,0,0,12"/>
-            <TextBox x:Name="QuestionBox" FontSize="26" Padding="8,6"
-                     AutomationProperties.Name="Your question"
-                     AutomationProperties.HelpText="Type what you want to do, then press Enter."/>
-            <Button x:Name="AskButton" Content="Ask" IsDefault="True" Margin="0,12,0,0" Padding="0,8"
-                    FontWeight="SemiBold" Foreground="White" Background="#1A4FA0" BorderThickness="0"
-                    AutomationProperties.Name="Ask" Click="OnAskClick"/>
+            <StackPanel x:Name="AskArea">
+                <TextBlock Text="What do you need help with?" FontWeight="SemiBold" Margin="0,0,0,12"/>
+                <TextBox x:Name="QuestionBox" FontSize="26" Padding="8,6"
+                         AutomationProperties.Name="Your question"
+                         AutomationProperties.HelpText="Type what you want to do, then press Enter."/>
+                <Button x:Name="AskButton" Content="Ask" IsDefault="True" Margin="0,12,0,0" Padding="0,8"
+                        FontWeight="SemiBold" Foreground="White" Background="#1A4FA0" BorderThickness="0"
+                        AutomationProperties.Name="Ask" Click="OnAskClick"/>
+            </StackPanel>
+
+            <StackPanel x:Name="GuideArea" Visibility="Collapsed">
+                <TextBlock x:Name="StepCounter" FontSize="18" Foreground="#555555" Margin="0,0,0,6"
+                           AutomationProperties.Name="Step number"/>
+                <TextBlock x:Name="StepText" FontSize="28" FontWeight="SemiBold" TextWrapping="Wrap"
+                           AutomationProperties.Name="Current step" AutomationProperties.LiveSetting="Polite"/>
+                <StackPanel Orientation="Horizontal" Margin="0,16,0,0">
+                    <Button x:Name="DoneButton" Content="Done" Padding="28,8" Margin="0,0,12,0" Visibility="Collapsed"
+                            FontWeight="SemiBold" Foreground="White" Background="#1A7F37" BorderThickness="0"
+                            AutomationProperties.Name="Done" Click="OnDoneClick"/>
+                    <Button x:Name="StopButton" Content="Stop" Padding="28,8"
+                            AutomationProperties.Name="Stop" Click="OnStopClick"/>
+                </StackPanel>
+            </StackPanel>
+
             <TextBlock x:Name="AnswerText" TextWrapping="Wrap" Margin="0,16,0,0" Visibility="Collapsed"
                        AutomationProperties.Name="Answer" AutomationProperties.LiveSetting="Polite"/>
         </StackPanel>

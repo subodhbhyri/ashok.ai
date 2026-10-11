@@ -1,0 +1,32 @@
+id: change-volume
+title: Change the sound volume
+os: [win11]
+examples:
+  - change the volume
+  - make my computer louder
+  - the sound is too quiet
+  - turn the volume down
+  - how do I adjust the sound
+steps:
+  - id: s1
+    say: Press the Windows key and the letter I together to open Settings.
+    action: pressKeys
+    keys: Win+I
+    doneWhen: { kind: elementVisible, target: { role: ListItem, name: System } }
+  - id: s2
+    say: Click System on the left.
+    action: click
+    target: { role: ListItem, name: System }
+    doneWhen: { kind: elementVisible, target: { role: ListItem, name: Sound } }
+  - id: s3
+    say: Click Sound.
+    action: click
+    target: { role: ListItem, name: Sound }
+    doneWhen:
+      kind: elementVisible
+      target: { role: Slider, name: Adjust the output volume, automationId: SystemSettings_Audio_Output_VolumeValue_Slider }
+  - id: s4
+    say: Drag the volume slider to the left to be quieter, or to the right to be louder. Press Done when it sounds right.
+    action: click
+    target: { role: Slider, name: Adjust the output volume, automationId: SystemSettings_Audio_Output_VolumeValue_Slider }
+    doneWhen: { kind: userConfirms }

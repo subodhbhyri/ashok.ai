@@ -1,0 +1,38 @@
+id: uninstall-app
+title: Uninstall an app
+os: [win11]
+examples:
+  - uninstall a program
+  - how do I remove an app
+  - delete an app from my computer
+  - get rid of a program I do not use
+  - remove software
+steps:
+  - id: s1
+    say: Press the Windows key and the letter I together to open Settings.
+    action: pressKeys
+    keys: Win+I
+    doneWhen: { kind: elementVisible, target: { role: ListItem, name: Apps } }
+  - id: s2
+    say: Click Apps on the left.
+    action: click
+    target: { role: ListItem, name: Apps }
+    doneWhen: { kind: elementVisible, target: { role: ListItem, name: Installed apps } }
+  - id: s3
+    say: Click Installed apps.
+    action: click
+    target: { role: ListItem, name: Installed apps }
+    doneWhen:
+      kind: elementVisible
+      target: { role: Edit, name: Search, automationId: SystemSettings_StorageSense_AppSizesListFilter_DisplayStringValue }
+  - id: s4
+    say: Find the app you want to remove. Click the three dots on the right of its row.
+    action: observe
+    doneWhen:
+      kind: elementVisible
+      target: { role: MenuItem, name: Uninstall, automationId: SystemSettings_StorageSense_AppSizesList_UninstallButton_UninstallButton }
+  - id: s5
+    say: Click Uninstall. Check the app name, then click Uninstall again only if you are sure.
+    action: click
+    target: { role: MenuItem, name: Uninstall, automationId: SystemSettings_StorageSense_AppSizesList_UninstallButton_UninstallButton }
+    doneWhen: { kind: userConfirms }
