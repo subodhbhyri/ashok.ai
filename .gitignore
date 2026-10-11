@@ -489,3 +489,6 @@ node_modules/
 # Generated Ajv standalone validators
 backend/src/generated/
 backend/dist/
+
+# Raw (pre-ranking) snapshots can contain on-screen text
+eval/snapshots/*.raw.json
