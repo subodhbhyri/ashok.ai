@@ -495,3 +495,5 @@ eval/snapshots/*.raw.json
 
 # Embedding model files (downloaded by scripts/fetch-model.ps1)
 client/models/
+
+eval/snapshots/

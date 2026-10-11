@@ -17,7 +17,7 @@ Ashok is a Windows tray app that answers "how do I…" questions by pointing at 
 - Overlay ring around the target element, local step verification, replanning when the user goes off plan.
 - Successful LLM plans cached as new playbooks.
 
-**Non-goals for v0.1:** clicking or typing for the user, macOS or Linux, browser-page content (web apps), accounts and billing, multi-language UI.
+**Non-goals for v0.1:** clicking or typing for the user, macOS or Linux, browser-page content (added later as Phase 4b), accounts and billing, multi-language UI.
 
 **Assumptions to confirm**
 
@@ -208,6 +208,20 @@ Eight phases, each a branch and PR; playbooks work fully offline by the end of P
 - [ ] Refusal path shown kindly in the panel.
 
 **Done when:** on the 20-task novel eval set, at least 14 tasks complete and the median session uses 2 or fewer LLM calls.
+
+### Phase 4b — Websites in the browser
+
+After Phase 4, extend the planner to web pages, which browsers expose through the same UI Automation tree.
+
+- [ ] Make Chrome expose its full page tree reliably (it only does so once it detects an assistive client); Edge works by default.
+- [ ] Small web eval set: Edge and Chrome on 3–4 common sites (for example a flight search, an email inbox, a video site), recorded like the desktop eval.
+- [ ] Keep the safety rules: guide to a checkout page but never help enter card or bank details; explain trading software controls, never what to buy or sell.
+
+**Done when:** at least 3 of 4 web tasks per browser complete with the ring on the right element.
+
+### Later — Screenshot help for drawn content
+
+Charts, maps and games are drawn as pictures, so the accessibility tree shows one blank box. Questions like "how do I read this graph" need a screenshot sent to a vision model (the plan's `needsScreenshot` path), with the user's per-session consent. Decide after Phase 5, based on whether real use needs it.
 
 ### Phase 5 — Speech and calm UX
 
