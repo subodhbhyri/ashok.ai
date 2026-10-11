@@ -1,7 +1,6 @@
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.Text;
-using System.Windows.Interop;
 using Ashok.Core.Capture;
 using Ashok.Core.Overlay;
 using Ashok.UI.Overlay;
@@ -44,7 +43,7 @@ public class OverlayAlignmentTests(ITestOutputHelper output)
 
         var rows = new List<Row>();
         using var overlayThread = new StaThread();
-        var overlay = overlayThread.Invoke(() => new OverlayWindow { Opacity = 1 });
+        var overlay = overlayThread.Invoke(() => new OverlayWindow());
         using var source = new FlaUiElementSource();
         try
         {
@@ -91,9 +90,16 @@ public class OverlayAlignmentTests(ITestOutputHelper output)
         Thread.Sleep(800); // let the compositor draw it
 
         var foregroundAfter = TestNative.GetForegroundWindow();
-        var overlayHandle = overlayThread.Invoke(() => new WindowInteropHelper(overlay).Handle);
+        var overlayHandle = overlay.Handle;
         var exStyle = TestNative.ExStyle(overlayHandle);
         var noFocus = foregroundBefore == foregroundAfter && (exStyle & TestNative.WS_EX_NOACTIVATE) != 0;
+
+        if (!noFocus)
+        {
+            string Describe(IntPtr h) => h == IntPtr.Zero ? "none" : $"{h} \"{Win32ForegroundWindowProvider.Describe(h).Title}\"";
+            output.WriteLine($"{monitor.Device}: foreground {Describe(foregroundBefore)} -> {Describe(foregroundAfter)}; " +
+                             $"overlay {overlayHandle}, ex-style 0x{exStyle:X}, probe {probe.Handle}");
+        }
 
         var shot = Screenshot(monitor.Bounds);
         var measured = FindRing(shot, monitor.Bounds);

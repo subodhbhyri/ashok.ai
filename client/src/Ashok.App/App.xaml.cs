@@ -88,7 +88,9 @@ public partial class App : Application
 
     protected override void OnExit(ExitEventArgs e)
     {
-        _services?.Dispose(); // disposes the hotkey (unregisters it), tray icon and speaker
+        // OnExit runs on the UI thread, which the overlay (a native window plus a DispatcherTimer) requires.
+        // Disposing the container disposes the overlay, hotkey (unregisters it), tray icon and speaker.
+        _services?.Dispose();
         _singleInstance?.Dispose();
         base.OnExit(e);
     }
