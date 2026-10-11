@@ -95,7 +95,7 @@ public class SessionRunnerTests
         Assert.True(SpinWait.SpinUntil(condition, TimeSpan.FromSeconds(10)), "Timed out waiting for a condition.");
 
     [Fact]
-    public async Task Signals_that_arrive_during_a_capture_are_skipped_not_queued()
+    public async Task Signals_that_arrive_during_a_capture_cause_exactly_one_follow_up_capture()
     {
         var (_, runner, source, watcher) = Build();
         source.Block();
@@ -109,12 +109,15 @@ public class SessionRunnerTests
         Assert.Equal(1, source.MaxConcurrent);
 
         source.Release();
-        WaitFor(() => source.Calls == 1 && runner.Captures == 1);
-        // nothing queued up behind it: after it finishes, a new signal is accepted and runs exactly once more
-        Thread.Sleep(100);
-        Assert.Equal(1, source.Calls);
-        watcher.Fire();
+        // the 20 signals collapse into one capture after the first finishes, never none and never 20
         WaitFor(() => source.Calls == 2);
+        Thread.Sleep(200);
+        Assert.Equal(2, source.Calls);
+        Assert.Equal(1, source.MaxConcurrent);
+
+        // and the runner is idle again: a new signal is accepted and runs exactly once more
+        watcher.Fire();
+        WaitFor(() => source.Calls == 3);
     }
 
     [Fact]

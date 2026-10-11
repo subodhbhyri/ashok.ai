@@ -112,13 +112,13 @@ public sealed record OffPlanContext(
     PlanStep Step,
     DateTimeOffset StepStartedAt,
     DateTimeOffset LastProgressAt,
-    DateTimeOffset Now);
+    DateTimeOffset Now,
+    bool? TargetOnScreen = null);
 
-// OPUS: off-plan and stuck heuristics (plan "Tricky parts", phases 3-4). Too eager feels naggy and burns
-// planner calls; too lax leaves the user lost. Decide what "unexpected foreground window" means (shell
-// surfaces such as Start and Search, dialogs of the same program, UAC), how long it must persist, what
-// counts as progress, and the stuck timeout. The session calls Reset when a guide or step begins and Check
-// on every tick; it already ignores Ashok's own windows. NaiveOffPlanDetector is the placeholder.
+/// <summary>
+/// The session calls Reset when a guide or step begins and Check on every tick; it already ignores Ashok's own windows.
+/// <see cref="OffPlanContext.TargetOnScreen"/> is null when the step has no target, otherwise whether the resolver found it.
+/// </summary>
 public interface IOffPlanDetector
 {
     void Reset(DateTimeOffset now);

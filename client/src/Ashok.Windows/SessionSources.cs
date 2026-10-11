@@ -96,14 +96,3 @@ public sealed class PollingUiWatcher(TimeSpan? interval = null) : IUiWatcher
         return new Timer(_ => onChange(), null, period, period);
     }
 }
-
-// OPUS: UI Automation event watcher (plan "Tricky parts", phase 3). UIA events fire on background threads,
-// are sometimes dropped, and can deadlock if handled on the UI thread. It should raise the same "look again"
-// signal as PollingUiWatcher, only sooner (focus changed, window opened, structure or property changed),
-// and keep polling as the safety net for dropped events. Not registered anywhere yet; the app uses
-// PollingUiWatcher until this exists.
-public sealed class UiaEventWatcher : IUiWatcher
-{
-    public IDisposable Start(Action onChange) =>
-        throw new NotSupportedException("UiaEventWatcher is not implemented yet; use PollingUiWatcher.");
-}

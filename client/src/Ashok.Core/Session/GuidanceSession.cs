@@ -193,10 +193,10 @@ public sealed class GuidanceSession(
 
             var current = _steps[_stepIndex];
             if (announce) AnnounceLocked(current);
-            UpdateRingLocked(current, screen);
+            var targetOnScreen = UpdateRingLocked(current, screen);
 
             verdict = offPlan.Check(new OffPlanContext(
-                screen.Foreground, _knownProcesses, current, _run.StartedAt, _lastProgress, now));
+                screen.Foreground, _knownProcesses, current, _run.StartedAt, _lastProgress, now, targetOnScreen));
             if (verdict != OffPlanVerdict.OnPlan)
                 _knownProcesses.Add(screen.Foreground.Process); // do not trigger again for the same window mid-replan
         }
@@ -305,19 +305,29 @@ public sealed class GuidanceSession(
         });
     }
 
-    private void UpdateRingLocked(PlanStep step, CapturedScreen screen)
+    /// <summary>Null when the step has no target, otherwise whether the resolver found it on this screen.</summary>
+    private bool? UpdateRingLocked(PlanStep step, CapturedScreen screen)
     {
-        var found = step.Target is { } target ? resolver.Best(target, screen.Candidates) : null;
+        if (step.Target is not { } target)
+        {
+            HideRingLocked();
+            return null;
+        }
+
+        var found = resolver.Best(target, screen.Candidates);
         if (found is null)
         {
             HideRingLocked();
-            return;
+            return false;
         }
 
         var rect = ScreenRect.FromBounds(found.Element.Bounds);
-        if (_ringShown == rect) return;
-        _ringShown = rect;
-        dispatcher.Post(() => overlay.Show(rect));
+        if (_ringShown != rect)
+        {
+            _ringShown = rect;
+            dispatcher.Post(() => overlay.Show(rect));
+        }
+        return true;
     }
 
     private void HideRingLocked()
