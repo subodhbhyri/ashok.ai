@@ -2,7 +2,6 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Interop;
-using System.Windows.Interop;
 using Ashok.Speech;
 using Ashok.UI;
 using Ashok.UI.Hotkey;

@@ -28,6 +28,11 @@ public sealed class SessionRunner : IDisposable
 
     public int Captures => Volatile.Read(ref _captures);
 
+    /// <summary>The most recent capture. Read this instead of capturing again: captures must never overlap.</summary>
+    public CapturedScreen? LastScreen => Volatile.Read(ref _lastScreen);
+
+    private CapturedScreen? _lastScreen;
+
     /// <summary>Signals dropped because a capture was already running.</summary>
     public int SkippedSignals => Volatile.Read(ref _skipped);
 
@@ -65,6 +70,7 @@ public sealed class SessionRunner : IDisposable
             if (_session.State.Phase != SessionPhase.Guiding) return;
             Interlocked.Increment(ref _captures);
             var screen = _source.Capture();
+            Volatile.Write(ref _lastScreen, screen);
             var focus = _focus.Get();
             await _session.TickAsync(screen, focus);
         }

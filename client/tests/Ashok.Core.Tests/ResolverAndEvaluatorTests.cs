@@ -31,6 +31,26 @@ public class TargetResolverTests
     }
 
     [Fact]
+    public void A_different_automation_id_rules_out_a_control_that_only_shares_the_name()
+    {
+        // The Network page's quick toggle is named "Wi-Fi" too, but it is not the Wi-Fi switch on the Wi-Fi page.
+        var quickToggle = Els.El("Button", "Wi-Fi", id: "SystemSettings_Network_Wifi_QuickAction_ToggleSwitch");
+        var wifiPageSwitch = Els.El("Button", "Wi-Fi", id: "SystemSettings_Connections_Adapter_Wi-Fi_Wi-Fi_RadioToggle", x: 300);
+        var target = Els.T("Button", "Wi-Fi", "SystemSettings_Connections_Adapter_Wi-Fi_Wi-Fi_RadioToggle");
+
+        Assert.Null(Resolver.Best(target, [quickToggle]));
+        Assert.Same(wifiPageSwitch, Resolver.Best(target, [quickToggle, wifiPageSwitch])!.Element);
+    }
+
+    [Fact]
+    public void An_element_with_no_id_can_still_match_a_target_that_names_one()
+    {
+        var plain = Els.El("Button", "Bluetooth");
+
+        Assert.NotNull(Resolver.Best(Els.T("Button", "Bluetooth", "SomeId"), [plain]));
+    }
+
+    [Fact]
     public void Exact_name_is_case_and_punctuation_insensitive()
     {
         var wifi = Els.El("Button", "Wi-Fi");
@@ -220,6 +240,24 @@ public class DoneEvaluatorTests
 
         Assert.False(Evaluator.IsDone(done, Ctx([Els.El("Button", "Other")])));
         Assert.True(Evaluator.IsDone(done, Ctx([Els.El("Text", "Downloads")])));
+    }
+
+    [Fact]
+    public void ElementVisible_needs_the_exact_role_not_a_look_alike()
+    {
+        var done = Visible(Els.T("TabItem", "Downloads"));
+        var sidebarItem = Els.El("TreeItem", "Start of Quick Access - Downloads (pinned)");
+
+        Assert.False(Evaluator.IsDone(done, Ctx([sidebarItem])));                               // still on This PC
+        Assert.True(Evaluator.IsDone(done, Ctx([sidebarItem, Els.El("TabItem", "Downloads")]))); // the folder is open
+    }
+
+    [Fact]
+    public void ElementGone_treats_a_look_alike_as_gone()
+    {
+        var gone = new DoneWhen(DoneKind.ElementGone, null, null, Els.T("Button", "OK"), null);
+
+        Assert.True(Evaluator.IsDone(gone, Ctx([Els.El("ListItem", "OK")], seen: true)));
     }
 
     [Fact]

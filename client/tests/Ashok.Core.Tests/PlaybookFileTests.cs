@@ -65,7 +65,10 @@ public class PlaybookFileTests
         {
             foreach (var (label, target) in Targets(step))
             {
-                var found = screens.Any(screen => resolver.Best(target, screen.Value) is not null);
+                // A doneWhen needs the exact role (it decides what is on screen); a step target may use a compatible one.
+                var found = screens.Any(screen => (label == "doneWhen"
+                    ? resolver.BestExactRole(target, screen.Value)
+                    : resolver.Best(target, screen.Value)) is not null);
                 if (!found) missing.Add($"{id}/{step.Id} {label}: {target.Role} '{target.Name}'");
             }
         }
@@ -81,10 +84,26 @@ public class PlaybookFileTests
         var bluetooth = Load("bluetooth-on");
         var s2Done = bluetooth.Steps[1].DoneWhen.Target!;
 
-        Assert.Null(resolver.Best(s2Done, Screens.Value["settings-nav"]));
+        Assert.Null(resolver.BestExactRole(s2Done, Screens.Value["settings-nav"]));
 
         // Even on the Bluetooth page, a breadcrumb button named "Bluetooth & devices" is not the switch.
-        Assert.Equal("Bluetooth", resolver.Best(s2Done, Screens.Value["bluetooth-page"])!.Element.Name);
+        Assert.Equal("Bluetooth", resolver.BestExactRole(s2Done, Screens.Value["bluetooth-page"])!.Element.Name);
+    }
+
+    [Fact]
+    public void A_step_is_not_satisfied_by_the_screen_before_it_just_because_a_control_shares_its_name()
+    {
+        var resolver = new TargetResolver();
+
+        // connect-wifi s3: the Wi-Fi switch is on the Wi-Fi page, not the Network page's quick toggle.
+        var wifi = Load("connect-wifi").Steps[2].DoneWhen.Target!;
+        Assert.Null(resolver.BestExactRole(wifi, Screens.Value["network-page"]));
+        Assert.NotNull(resolver.BestExactRole(wifi, Screens.Value["wifi-page"]));
+
+        // pair-device s3: the dialog's Bluetooth button is not the page's Bluetooth switch.
+        var dialogButton = Load("pair-device").Steps[2].DoneWhen.Target!;
+        Assert.Null(resolver.BestExactRole(dialogButton, Screens.Value["bluetooth-page"]));
+        Assert.NotNull(resolver.BestExactRole(dialogButton, Screens.Value["add-device-dialog"]));
     }
 
     [Fact]
@@ -99,6 +118,17 @@ public class PlaybookFileTests
 
         Assert.Equal("TreeItem", sidebar.Element.Role);
         Assert.Equal("TabItem", tab.Element.Role);
+    }
+
+    [Fact]
+    public void Downloads_is_not_done_on_This_PC_where_only_the_sidebar_item_exists()
+    {
+        var resolver = new TargetResolver();
+        var done = Load("find-downloads").Steps[1].DoneWhen.Target!;
+        var thisPc = new[] { Screens.Value["explorer-folder"][2] }; // only the sidebar TreeItem
+
+        Assert.Null(resolver.BestExactRole(done, thisPc));
+        Assert.NotNull(resolver.BestExactRole(done, Screens.Value["explorer-folder"]));
     }
 
     [Fact]

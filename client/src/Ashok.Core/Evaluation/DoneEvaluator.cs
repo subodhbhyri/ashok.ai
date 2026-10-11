@@ -26,9 +26,9 @@ public sealed class DoneEvaluator(TargetResolver resolver)
     public bool IsDone(DoneWhen condition, EvaluationContext context) => condition.Kind switch
     {
         DoneKind.WindowOpened => WindowOpened(condition, context),
-        DoneKind.ElementVisible => condition.Target is { } t && resolver.Best(t, context.Candidates) is not null,
+        DoneKind.ElementVisible => condition.Target is { } t && resolver.BestExactRole(t, context.Candidates) is not null,
         DoneKind.ElementGone => condition.Target is { } t && context.ElementSeenSinceStart &&
-                                resolver.Best(t, context.Candidates) is null,
+                                resolver.BestExactRole(t, context.Candidates) is null,
         DoneKind.ToggleState => ToggleState(condition, context),
         DoneKind.FocusOn => FocusOn(condition, context),
         DoneKind.UserConfirms => context.UserConfirmed,
@@ -37,7 +37,7 @@ public sealed class DoneEvaluator(TargetResolver resolver)
 
     /// <summary>True once the condition's target is on screen; used to arm <c>elementGone</c>.</summary>
     public bool TargetPresent(DoneWhen condition, IReadOnlyList<UiElement> candidates) =>
-        condition.Target is { } t && resolver.Best(t, candidates) is not null;
+        condition.Target is { } t && resolver.BestExactRole(t, candidates) is not null;
 
     private static bool Matches(DoneWhen condition, ForegroundState window) =>
         (condition.Process is null || string.Equals(Strip(condition.Process), Strip(window.Process), StringComparison.OrdinalIgnoreCase)) &&
@@ -55,7 +55,7 @@ public sealed class DoneEvaluator(TargetResolver resolver)
     private bool ToggleState(DoneWhen condition, EvaluationContext context)
     {
         if (condition.Target is not { } target || condition.State is not { } state) return false;
-        var found = resolver.Best(target, context.Candidates);
+        var found = resolver.BestExactRole(target, context.Candidates);
         return found is not null && string.Equals(found.Element.Toggle, state, StringComparison.OrdinalIgnoreCase);
     }
 
@@ -63,7 +63,7 @@ public sealed class DoneEvaluator(TargetResolver resolver)
     {
         if (condition.Target is not { } target || context.Focused is not { } focused) return false;
         var asElement = new UiElement("e0", focused.Role, focused.Name, focused.AutomationId, [0, 0, 1, 1], true, null);
-        return resolver.Best(target, [asElement]) is not null;
+        return resolver.BestExactRole(target, [asElement]) is not null;
     }
 
     private static string Strip(string process) =>

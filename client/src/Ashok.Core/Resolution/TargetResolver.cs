@@ -6,7 +6,8 @@ namespace Ashok.Core.Resolution;
 public enum MatchKind { AutomationId, ExactName, PartialName, FuzzyName, RoleFallback }
 
 /// <param name="Index">Position in the candidate list, i.e. document order.</param>
-public sealed record Resolved(UiElement Element, double Score, MatchKind How, int Index);
+/// <param name="RoleExact">False when the element only has a compatible role (a ListItem standing in for a Button).</param>
+public sealed record Resolved(UiElement Element, double Score, MatchKind How, int Index, bool RoleExact = true);
 
 public sealed record ResolveResult(IReadOnlyList<Resolved> Matches)
 {
@@ -50,11 +51,21 @@ public sealed class TargetResolver
             var roleFactor = RoleFactor(target.Role, element.Role);
             if (roleFactor == 0) continue;
 
-            if (!string.IsNullOrEmpty(target.AutomationId) &&
-                string.Equals(target.AutomationId, element.AutomationId, StringComparison.OrdinalIgnoreCase))
+            if (!string.IsNullOrEmpty(target.AutomationId))
             {
-                matches.Add(new Resolved(element, 1.0 * roleFactor + 0.01, MatchKind.AutomationId, i));
-                continue;
+                if (string.Equals(target.AutomationId, element.AutomationId, StringComparison.OrdinalIgnoreCase))
+                {
+                    matches.Add(new Resolved(element, 1.0 * roleFactor + 0.01, MatchKind.AutomationId, i, roleFactor == 1));
+                    continue;
+                }
+
+                // A different, non-empty id means a different control that merely shares the name (the Wi-Fi
+                // quick toggle on the Network page is not the Wi-Fi switch on the Wi-Fi page). Elements with
+                // no id at all can still match by name and exact role.
+                if (!string.IsNullOrEmpty(element.AutomationId)) continue;
+
+                // And when the target is that specific, an id-less element must at least have the same role.
+                if (roleFactor < 1) continue;
             }
 
             var variants = NameVariants(element.Name);
@@ -63,19 +74,19 @@ public sealed class TargetResolver
 
             if (name == wanted)
             {
-                matches.Add(new Resolved(element, roleFactor, roleFactor == 1 ? MatchKind.ExactName : MatchKind.RoleFallback, i));
+                matches.Add(new Resolved(element, roleFactor, roleFactor == 1 ? MatchKind.ExactName : MatchKind.RoleFallback, i, roleFactor == 1));
                 continue;
             }
 
             if (variants.Skip(1).Contains(wanted))
             {
-                matches.Add(new Resolved(element, PartialNameScore * roleFactor, MatchKind.PartialName, i));
+                matches.Add(new Resolved(element, PartialNameScore * roleFactor, MatchKind.PartialName, i, roleFactor == 1));
                 continue;
             }
 
             var similarity = Similarity(wanted, name);
             if (similarity >= FuzzyThreshold)
-                matches.Add(new Resolved(element, similarity * roleFactor, MatchKind.FuzzyName, i));
+                matches.Add(new Resolved(element, similarity * roleFactor, MatchKind.FuzzyName, i, roleFactor == 1));
         }
 
         return new ResolveResult(matches.OrderByDescending(m => m.Score).ThenBy(m => m.Index).ToList());
@@ -111,6 +122,14 @@ public sealed class TargetResolver
         System.Text.RegularExpressions.Regex.Replace(s, @"\([^)]*\)", " ");
 
     public Resolved? Best(Target target, IReadOnlyList<UiElement> candidates) => Resolve(target, candidates).Best;
+
+    /// <summary>
+    /// The best match whose role is exactly the target role. For deciding what is ON SCREEN (a doneWhen), a
+    /// look-alike with a compatible role is a false positive: a sidebar item named Downloads is not the
+    /// Downloads tab. Pointing at something to click can still accept compatible roles through Best.
+    /// </summary>
+    public Resolved? BestExactRole(Target target, IReadOnlyList<UiElement> candidates) =>
+        Resolve(target, candidates).Matches.FirstOrDefault(m => m.RoleExact);
 
     private static double RoleFactor(string wanted, string actual)
     {
