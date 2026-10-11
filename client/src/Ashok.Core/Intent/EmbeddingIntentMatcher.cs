@@ -12,9 +12,11 @@ public sealed record PlaybookScore(string PlaybookId, double Score);
 /// </summary>
 public sealed class EmbeddingIntentMatcher : IIntentMatcher
 {
-    // Provisional defaults; tuned on the accuracy set in the Model tests (see ModelMatcherTests).
-    public const double DefaultThreshold = 0.55;
-    public const double DefaultMargin = 0.03;
+    // Tuned on the Model-test accuracy set with all-MiniLM-L6-v2: accuracy peaks at 0.50 (96.4% overall) and
+    // is flat for margins 0 to 0.04. Provisional, since the set is small (40 phrasings, 15 non-matches);
+    // revisit when real users' questions are available.
+    public const double DefaultThreshold = 0.50;
+    public const double DefaultMargin = 0.02;
 
     private readonly IEmbedder _embedder;
     private readonly IReadOnlyList<Playbook> _playbooks;
@@ -77,8 +79,13 @@ public static class ModelFiles
 {
     public const string Fp32 = "model_fp32.onnx";
     public const string Qint8 = "model_qint8.onnx";
-    public const string Quint8 = "model_quint8_avx2.onnx";
     public const string Vocab = "vocab.txt";
+
+    // int8 is the app's model: on the Model-test set (55 new phrasings plus the 50 playbook examples, at the
+    // default threshold) it makes exactly the same decisions as fp32 (105 of 105, 98.1% each; best-score
+    // difference median 0.001, max 0.045) at a quarter of the size (23 MB against 90 MB). fp32 stays as the
+    // comparison baseline, so a model change that breaks the equivalence shows up in CI.
+    public const string Default = Qint8;
 
     public static string? FindDirectory()
     {
@@ -94,4 +101,8 @@ public static class ModelFiles
         }
         return null;
     }
+
+    /// <summary>The default model from a models directory.</summary>
+    public static MiniLmEmbedder OpenDefault(string directory) =>
+        new(Path.Combine(directory, Default), Path.Combine(directory, Vocab));
 }

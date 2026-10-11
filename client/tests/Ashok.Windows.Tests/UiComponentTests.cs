@@ -2,6 +2,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Interop;
+using System.Windows.Interop;
 using Ashok.Speech;
 using Ashok.UI;
 using Ashok.UI.Hotkey;
@@ -106,6 +107,69 @@ public class UiComponentTests(ITestOutputHelper output)
             });
 
             Assert.False(raised);
+        }
+        finally
+        {
+            sta.Invoke(panel.Hide);
+        }
+    }
+
+    [Fact]
+    public void After_a_question_focus_returns_to_the_users_window_and_the_panel_stays_visible_but_inactive()
+    {
+        using var probe = new WpfProbeWindow();     // stands in for the window the user needs help with
+        using var sta = new StaThread();
+        var panel = sta.Invoke(() => new AskPanel());
+        try
+        {
+            TestNative.TapAlt();   // the hotkey press, as far as Windows' foreground rules are concerned
+            sta.Invoke(() =>
+            {
+                panel.ShowForQuestion(probe.Handle);
+                QuestionBox(panel).Text = "turn on bluetooth";
+            });
+            Thread.Sleep(300);
+
+            TestNative.TapAlt();   // the Enter key
+            sta.Invoke(() => Click(AskButton(panel)));
+            Thread.Sleep(600);
+
+            var foreground = TestNative.GetForegroundWindow();
+            var panelHandle = sta.Invoke(() => new WindowInteropHelper(panel).Handle);
+            output.WriteLine($"foreground {foreground} \"{Win32ForegroundWindowProvider.Describe(foreground).Title}\", probe {probe.Handle}, panel {panelHandle}, FocusReturned={sta.Invoke(() => panel.FocusReturned)}");
+
+            Assert.Equal(probe.Handle, foreground);
+            Assert.True(sta.Invoke(() => panel.FocusReturned));
+            Assert.True(sta.Invoke(() => panel.IsVisible));
+            Assert.NotEqual(panelHandle, foreground);
+            Assert.True((TestNative.ExStyle(panelHandle) & TestNative.WS_EX_NOACTIVATE) != 0, "panel must not be activatable");
+        }
+        finally
+        {
+            sta.Invoke(panel.Hide);
+        }
+    }
+
+    [Fact]
+    public void Asking_again_makes_the_panel_activatable_again()
+    {
+        using var probe = new WpfProbeWindow();
+        using var sta = new StaThread();
+        var panel = sta.Invoke(() => new AskPanel());
+        try
+        {
+            sta.Invoke(() =>
+            {
+                panel.ShowForQuestion(probe.Handle);
+                QuestionBox(panel).Text = "first";
+                Click(AskButton(panel));
+            });
+            var handle = sta.Invoke(() => new WindowInteropHelper(panel).Handle);
+            Assert.NotEqual(0, TestNative.ExStyle(handle) & TestNative.WS_EX_NOACTIVATE);
+
+            sta.Invoke(() => panel.ShowForQuestion(probe.Handle));
+
+            Assert.Equal(0, TestNative.ExStyle(handle) & TestNative.WS_EX_NOACTIVATE);
         }
         finally
         {

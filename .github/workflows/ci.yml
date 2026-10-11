@@ -13,8 +13,22 @@ jobs:
       - uses: actions/setup-dotnet@v4
         with:
           dotnet-version: 10.0.x
+      # The embedding model (about 113 MB with both variants) is cached on the pinned SHA-256 values. The fetch
+      # script runs on every build: on a cache hit it only verifies the hashes, on a miss it downloads.
+      - uses: actions/cache@v4
+        with:
+          path: client/models
+          key: model-${{ hashFiles('scripts/model-manifest.json') }}
+      - name: Fetch embedding model
+        shell: pwsh
+        run: ./scripts/fetch-model.ps1 -Variant all
       - run: dotnet build client/Ashok.sln -c Release
-      - run: dotnet test client/Ashok.sln -c Release --no-build --filter "Category!=Desktop"
+      - name: Unit tests
+        run: dotnet test client/Ashok.sln -c Release --no-build --filter "Category!=Desktop&Category!=Model"
+      - name: Matcher accuracy (real model, fp32 vs int8)
+        env:
+          ASHOK_REQUIRE_MODEL: "1"
+        run: dotnet test client/Ashok.sln -c Release --no-build --filter "Category=Model"
 
   backend:
     runs-on: ubuntu-latest

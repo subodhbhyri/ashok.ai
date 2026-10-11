@@ -8,11 +8,12 @@
   This is a dev-time and CI-time script. The app itself never downloads anything.
 
 .PARAMETER Variant
-  common = vocab only, fp32 / qint8 / quint8 = that model (plus vocab), all = everything.
+  fp32 or qint8 = that model plus vocab.txt, all = both. The app uses qint8 (see ModelFiles.Default);
+  fp32 is only needed for the accuracy comparison in the Model tests.
 #>
 [CmdletBinding()]
 param(
-    [ValidateSet('fp32', 'qint8', 'quint8', 'all')]
+    [ValidateSet('fp32', 'qint8', 'all')]
     [string]$Variant = 'all',
     [string]$Destination = (Join-Path $PSScriptRoot '..\client\models')
 )
