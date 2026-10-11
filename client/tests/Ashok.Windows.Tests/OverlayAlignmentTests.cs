@@ -92,7 +92,9 @@ public class OverlayAlignmentTests(ITestOutputHelper output)
         var foregroundAfter = TestNative.GetForegroundWindow();
         var overlayHandle = overlay.Handle;
         var exStyle = TestNative.ExStyle(overlayHandle);
-        var noFocus = foregroundBefore == foregroundAfter && (exStyle & TestNative.WS_EX_NOACTIVATE) != 0;
+        // Other windows (Settings, Explorer, the probe itself) may legitimately take the foreground while the
+        // test runs, so the check is that the overlay never becomes the foreground window.
+        var noFocus = foregroundAfter != overlayHandle && (exStyle & TestNative.WS_EX_NOACTIVATE) != 0;
 
         if (!noFocus)
         {
