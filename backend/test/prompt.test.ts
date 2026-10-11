@@ -56,11 +56,12 @@ describe("playbook hint", () => {
     expect(buildUserMessage(base)).not.toContain("<hint>");
   });
 
-  it("is one line naming the playbook and leaving the choice to the planner", () => {
+  it("is exactly the agreed line, naming the guide and preferring the app", () => {
     const message = buildUserMessage({ ...base, playbookHint: "change-display-scaling" });
     expect(message.split("<hint>").length - 1).toBe(1);
-    expect(message).toContain('"change-display-scaling"');
-    expect(message).toContain("only if the question is really about Windows settings");
+    expect(message).toContain(
+      `<hint>This question also matched Ashok's built-in Windows guide "change-display-scaling", but the person is inside another app (see <screen>). Questions asked from inside an app are usually about that app: prefer the app's own way, such as its View or Zoom menu or its own settings. Use the Windows guide's route only if the question clearly asks about Windows itself or the whole screen.</hint>`,
+    );
     expect(message.indexOf("</hint>")).toBeLessThan(message.indexOf("Call submit_plan"));
   });
 });
