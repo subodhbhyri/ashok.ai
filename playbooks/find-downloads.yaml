@@ -1,5 +1,6 @@
 id: find-downloads
 title: Find your downloaded files
+scope: system
 os: [win11]
 examples:
   - where are my downloads

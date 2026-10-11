@@ -8,6 +8,7 @@ public class PlaybookLoaderTests
     private const string Valid = """
         id: find-downloads
         title: Find your downloaded files
+        scope: system
         os: [win10, win11]
         examples:
           - where are my downloads

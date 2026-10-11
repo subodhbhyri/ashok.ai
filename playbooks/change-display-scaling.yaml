@@ -1,5 +1,6 @@
 id: change-display-scaling
 title: Make text and apps bigger or smaller
+scope: system
 os: [win11]
 examples:
   - make everything on the screen bigger

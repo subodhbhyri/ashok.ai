@@ -1,5 +1,6 @@
 id: open-downloaded-file
 title: Open a file you downloaded
+scope: system
 os: [win11]
 examples:
   - open the file I downloaded

@@ -1,5 +1,6 @@
 id: take-screenshot
 title: Take a screenshot
+scope: system
 os: [win11]
 examples:
   - take a screenshot

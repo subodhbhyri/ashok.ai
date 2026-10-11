@@ -1,1 +1,1 @@
-{ "id": "x", "title": "X", "os": ["macos"], "examples": ["x"], "steps": [ { "id": "s1", "say": "Look.", "action": "observe", "doneWhen": { "kind": "userConfirms" } } ] }
+{ "id": "x", "title": "X", "scope": "system", "os": ["macos"], "examples": ["x"], "steps": [ { "id": "s1", "say": "Look.", "action": "observe", "doneWhen": { "kind": "userConfirms" } } ] }

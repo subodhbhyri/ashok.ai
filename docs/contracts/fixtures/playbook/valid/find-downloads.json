@@ -1,6 +1,7 @@
 {
   "id": "find-downloads",
   "title": "Find your downloaded files",
+  "scope": "system",
   "os": ["win10", "win11"],
   "examples": ["where are my downloads", "I can't find the file I downloaded"],
   "steps": [

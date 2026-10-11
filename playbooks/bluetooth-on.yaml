@@ -1,5 +1,6 @@
 id: bluetooth-on
 title: Turn Bluetooth on
+scope: system
 os: [win11]
 examples:
   - turn on bluetooth

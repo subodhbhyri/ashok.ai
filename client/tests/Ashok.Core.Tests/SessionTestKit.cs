@@ -71,8 +71,32 @@ internal sealed class FakeView : ISessionView
 
 internal sealed class FakeMatcher(params (string Question, string PlaybookId)[] known) : IIntentMatcher
 {
+    public double Score { get; set; } = 0.9;
+
     public IntentMatch? Match(string question) =>
-        known.FirstOrDefault(k => k.Question == question) is { PlaybookId: { } id } ? new IntentMatch(id, 0.9) : null;
+        known.FirstOrDefault(k => k.Question == question) is { PlaybookId: { } id } ? new IntentMatch(id, Score) : null;
+}
+
+/// <summary>Windows by handle plus a current foreground; a handle not in the table is a window that is gone.</summary>
+internal sealed class FakeWindows : ISnapshotSource
+{
+    public Dictionary<long, CapturedScreen> ByHandle { get; } = [];
+
+    public CapturedScreen Foreground { get; set; } = new(new ForegroundState("none", "", 0), []);
+
+    public List<string> Calls { get; } = [];
+
+    public CapturedScreen Capture()
+    {
+        Calls.Add("foreground");
+        return Foreground;
+    }
+
+    public CapturedScreen? CaptureWindow(long hwnd)
+    {
+        Calls.Add($"window {hwnd}");
+        return ByHandle.GetValueOrDefault(hwnd);
+    }
 }
 
 internal sealed class FakePlanner : IPlanner
@@ -117,6 +141,8 @@ internal static class Steps
     public static DoneWhen Confirm() => new(DoneKind.UserConfirms, null, null, null, null);
 
     public static Playbook Book(string id, params PlanStep[] steps) => new(id, id, ["win11"], ["example"], steps);
+
+    public static Playbook AppBook(string id, params PlanStep[] steps) => Book(id, steps) with { Scope = PlaybookScope.App };
 }
 
 /// <summary>A session wired to fakes, with a clock the test controls.</summary>
@@ -132,7 +158,9 @@ internal sealed class Rig
     public GuidanceSession Session { get; }
     public List<SessionState> States { get; } = [];
 
-    public Rig(IEnumerable<Playbook> playbooks, FakeMatcher? matcher = null, IPlanner? planner = null, IOffPlanDetector? detector = null)
+    public FakeWindows Windows { get; } = new();
+
+    public Rig(IEnumerable<Playbook> playbooks, FakeMatcher? matcher = null, IPlanner? planner = null, IOffPlanDetector? detector = null, IDebugLog? debugLog = null)
     {
         var resolver = new TargetResolver();
         Session = new GuidanceSession(
@@ -142,7 +170,7 @@ internal sealed class Rig
             detector ?? new NaiveOffPlanDetector(),
             resolver,
             new DoneEvaluator(resolver),
-            Overlay, Speaker, View, new InlineDispatcher(), Time, Own);
+            Overlay, Speaker, View, new InlineDispatcher(), Time, Own, Windows, debugLog);
         Session.StateChanged += States.Add;
     }
 

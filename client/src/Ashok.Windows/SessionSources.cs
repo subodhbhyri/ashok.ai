@@ -16,9 +16,16 @@ public sealed class CandidateSource(
     IElementSource source,
     IReadOnlySet<string>? sensitiveProcesses = null) : ISnapshotSource
 {
-    public CapturedScreen Capture()
+    public CapturedScreen Capture() => Capture(foreground.Get());
+
+    public CapturedScreen? CaptureWindow(long hwnd)
     {
-        var window = foreground.Get();
+        var handle = new IntPtr(hwnd);
+        return NativeMethods.IsWindow(handle) ? Capture(Win32ForegroundWindowProvider.Describe(handle)) : null;
+    }
+
+    private CapturedScreen Capture(ForegroundWindow? window)
+    {
         if (window is null) return new CapturedScreen(new ForegroundState("none", "", 0), []);
 
         var state = new ForegroundState(window.Process, window.Title, window.Handle.ToInt64());
@@ -27,7 +34,8 @@ public sealed class CandidateSource(
         if (Redaction.IsSensitiveProcess(window.Process, sensitiveProcesses))
             return new CapturedScreen(state with { Title = "" }, []);
 
-        return new CapturedScreen(state, Redaction.Apply(source.Read(window.Handle)).Candidates);
+        var redaction = Redaction.Apply(source.Read(window.Handle));
+        return new CapturedScreen(state, redaction.Candidates, redaction.Redacted);
     }
 }
 

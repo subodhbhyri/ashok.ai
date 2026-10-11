@@ -1,11 +1,14 @@
 using System.Diagnostics;
 using System.IO;
+using System.Net.Http;
 using System.Windows;
 using System.Windows.Threading;
 using Ashok.App.Tray;
 using Ashok.Core.Evaluation;
+using Ashok.Core.Capture;
 using Ashok.Core.Intent;
 using Ashok.Core.Overlay;
+using Ashok.Core.Planner;
 using Ashok.Core.Playbooks;
 using Ashok.Core.Resolution;
 using Ashok.Core.Session;
@@ -85,7 +88,8 @@ public partial class App : Application
         services.AddSingleton<ISessionView>(sp => new PanelSessionView(sp.GetRequiredService<AskPanel>()));
         services.AddSingleton<IPlaybookStore>(_ => PlaybookStore.LoadDirectory(PlaybookDirectory(), "win11"));
         services.AddSingleton<IIntentMatcher>(sp => CreateMatcher(sp.GetRequiredService<IPlaybookStore>(), sp.GetRequiredService<TrayIcon>()));
-        services.AddSingleton<IPlanner, NullPlanner>();          // Phase 4 replaces this; playbooks work fully offline
+        services.AddSingleton<IInstallTokenStore, FileInstallTokenStore>();
+        services.AddSingleton<IPlanner>(sp => CreatePlanner(sp.GetRequiredService<IInstallTokenStore>()));
         services.AddSingleton<IOffPlanDetector, NaiveOffPlanDetector>();
         services.AddSingleton<TargetResolver>();
         services.AddSingleton<DoneEvaluator>();
@@ -100,10 +104,23 @@ public partial class App : Application
             sp.GetRequiredService<TargetResolver>(), sp.GetRequiredService<DoneEvaluator>(),
             sp.GetRequiredService<IOverlay>(), sp.GetRequiredService<ISpeaker>(),
             sp.GetRequiredService<ISessionView>(), sp.GetRequiredService<IUiDispatcher>(),
-            sp.GetRequiredService<TimeProvider>(), Process.GetCurrentProcess().ProcessName));
+            sp.GetRequiredService<TimeProvider>(), Process.GetCurrentProcess().ProcessName,
+            sp.GetRequiredService<ISnapshotSource>(), new FileDebugLog()));
         services.AddSingleton<SessionRunner>();
 
         return services.BuildServiceProvider();
+    }
+
+    // ASHOK_API_URL points at the Worker. Without it the app still works: playbooks are fully offline.
+    private static IPlanner CreatePlanner(IInstallTokenStore tokens)
+    {
+        if (!Uri.TryCreate(Environment.GetEnvironmentVariable("ASHOK_API_URL"), UriKind.Absolute, out var baseUrl) ||
+            baseUrl.Scheme != Uri.UriSchemeHttps && !baseUrl.IsLoopback)
+            return new NullPlanner();
+
+        var version = typeof(App).Assembly.GetName().Version?.ToString(3) ?? "0.0.0";
+        var http = new HttpClient { BaseAddress = new Uri(baseUrl.AbsoluteUri.TrimEnd('/') + "/"), Timeout = Timeout.InfiniteTimeSpan };
+        return new HttpPlanner(http, tokens, new HeuristicRanker(), OsInfoProvider.Get, version);
     }
 
     private static string PlaybookDirectory()
