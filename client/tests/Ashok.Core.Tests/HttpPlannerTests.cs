@@ -201,6 +201,16 @@ public class HttpPlannerTests
     }
 
     [Fact]
+    public async Task Snapshot_CarriesTheRealRedactedCount()
+    {
+        var handler = Worker(Fixture("plan/valid/bluetooth.json"));
+        await Planner(handler).PlanAsync(Request() with { Redacted = 4 }, default);
+
+        using var doc = JsonDocument.Parse(handler.Seen.Single(s => !IsRegister(s.Request)).Body);
+        Assert.Equal(4, doc.RootElement.GetProperty("snapshot").GetProperty("redacted").GetInt32());
+    }
+
+    [Fact]
     public async Task NoScreenYet_SendsAnEmptyValidSnapshot()
     {
         var handler = Worker(Fixture("plan/valid/bluetooth.json"));

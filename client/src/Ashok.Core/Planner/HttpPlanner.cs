@@ -131,7 +131,7 @@ public sealed class HttpPlanner(
         var foreground = request.Foreground is { } f
             ? new ForegroundInfo(string.IsNullOrEmpty(f.Process) ? "unknown" : f.Process, f.Title)
             : new ForegroundInfo("unknown", "");
-        return new UiSnapshot(os(), foreground, ranked.Elements, 0, ranked.Truncated);
+        return new UiSnapshot(os(), foreground, ranked.Elements, request.Redacted, ranked.Truncated);
     }
 
     private async Task<string?> EnsureTokenAsync(CancellationToken ct)

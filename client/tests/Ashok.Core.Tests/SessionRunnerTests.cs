@@ -21,6 +21,8 @@ internal sealed class ProbeSource : ISnapshotSource
 
     public void Release() => _gate.Set();
 
+    public CapturedScreen? CaptureWindow(long hwnd) => null;
+
     public CapturedScreen Capture()
     {
         var now = Interlocked.Increment(ref _running);

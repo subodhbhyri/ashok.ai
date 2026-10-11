@@ -75,6 +75,28 @@ internal sealed class FakeMatcher(params (string Question, string PlaybookId)[] 
         known.FirstOrDefault(k => k.Question == question) is { PlaybookId: { } id } ? new IntentMatch(id, 0.9) : null;
 }
 
+/// <summary>Windows by handle plus a current foreground; a handle not in the table is a window that is gone.</summary>
+internal sealed class FakeWindows : ISnapshotSource
+{
+    public Dictionary<long, CapturedScreen> ByHandle { get; } = [];
+
+    public CapturedScreen Foreground { get; set; } = new(new ForegroundState("none", "", 0), []);
+
+    public List<string> Calls { get; } = [];
+
+    public CapturedScreen Capture()
+    {
+        Calls.Add("foreground");
+        return Foreground;
+    }
+
+    public CapturedScreen? CaptureWindow(long hwnd)
+    {
+        Calls.Add($"window {hwnd}");
+        return ByHandle.GetValueOrDefault(hwnd);
+    }
+}
+
 internal sealed class FakePlanner : IPlanner
 {
     public List<PlanRequest> Requests { get; } = [];
@@ -132,6 +154,8 @@ internal sealed class Rig
     public GuidanceSession Session { get; }
     public List<SessionState> States { get; } = [];
 
+    public FakeWindows Windows { get; } = new();
+
     public Rig(IEnumerable<Playbook> playbooks, FakeMatcher? matcher = null, IPlanner? planner = null, IOffPlanDetector? detector = null)
     {
         var resolver = new TargetResolver();
@@ -142,7 +166,7 @@ internal sealed class Rig
             detector ?? new NaiveOffPlanDetector(),
             resolver,
             new DoneEvaluator(resolver),
-            Overlay, Speaker, View, new InlineDispatcher(), Time, Own);
+            Overlay, Speaker, View, new InlineDispatcher(), Time, Own, Windows);
         Session.StateChanged += States.Add;
     }
 

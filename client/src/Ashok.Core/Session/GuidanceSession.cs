@@ -29,7 +29,8 @@ public sealed class GuidanceSession(
     ISessionView view,
     IUiDispatcher dispatcher,
     TimeProvider time,
-    string ownProcess)
+    string ownProcess,
+    ISnapshotSource? snapshots = null)
 {
     public const string NotSureMessage =
         "I'm not sure how to help with that yet. It might be best to ask someone you trust.";
@@ -91,8 +92,29 @@ public sealed class GuidanceSession(
                 return;
             }
         }
-        await ReplanAsync(PlanReason.New, epoch, null);
+
+        // The planner needs to see the window the user asked about, which is not Ashok's own panel.
+        var screen = CapturePreviousWindow(previousWindow); // AskAsync already runs off the UI thread (SessionRunner)
+        await ReplanAsync(PlanReason.New, epoch, screen);
     }
+
+    private CapturedScreen? CapturePreviousWindow(long previousWindow)
+    {
+        if (snapshots is null) return null;
+        try
+        {
+            var screen = previousWindow != 0 ? snapshots.CaptureWindow(previousWindow) : null;
+            if (screen is null || IsOwn(screen)) screen = snapshots.Capture(); // that window is gone: use whatever is in front now
+            return IsOwn(screen) ? null : screen;
+        }
+        catch (Exception)
+        {
+            return null; // a window that closes mid-capture must not stop the question from being answered
+        }
+    }
+
+    private bool IsOwn(CapturedScreen screen) =>
+        string.Equals(screen.Foreground.Process, ownProcess, StringComparison.OrdinalIgnoreCase);
 
     /// <summary>A fresh capture of the foreground window. Advances, re-points the ring, or detects trouble.</summary>
     public async Task TickAsync(CapturedScreen screen, FocusedElement? focus)
@@ -194,7 +216,7 @@ public sealed class GuidanceSession(
             token = _plannerCts.Token;
             HideRingLocked();
             Set(new SessionState(SessionPhase.Replanning, State.GuideId, State.StepIndex));
-            request = new PlanRequest(_question, reason, _history.ToList(), screen?.Foreground, screen?.Candidates ?? []);
+            request = new PlanRequest(_question, reason, _history.ToList(), screen?.Foreground, screen?.Candidates ?? [], screen?.Redacted ?? 0);
         }
 
         PlannerResult result;

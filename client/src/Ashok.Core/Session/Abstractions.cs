@@ -4,13 +4,20 @@ using Ashok.Core.Evaluation;
 namespace Ashok.Core.Session;
 
 /// <summary>What one capture of the foreground window produced: who is in front and the unranked candidates.</summary>
-public sealed record CapturedScreen(ForegroundState Foreground, IReadOnlyList<UiElement> Candidates);
+/// <param name="Redacted">How many elements redaction dropped (passwords and the like); sent to the planner as a count only.</param>
+public sealed record CapturedScreen(ForegroundState Foreground, IReadOnlyList<UiElement> Candidates, int Redacted = 0);
 
 /// <summary>Captures the screen for the session. The Windows implementation wraps UI Automation.</summary>
 public interface ISnapshotSource
 {
     /// <summary>Called off the UI thread and never concurrently with itself.</summary>
     CapturedScreen Capture();
+
+    /// <summary>
+    /// Captures a specific window, for the window the user was in when they asked.
+    /// Null when that window no longer exists. Same threading rules as <see cref="Capture"/>.
+    /// </summary>
+    CapturedScreen? CaptureWindow(long hwnd);
 }
 
 public interface IFocusProbe
@@ -42,7 +49,8 @@ public sealed record PlanRequest(
     PlanReason Reason,
     IReadOnlyList<StepRecord> History,
     ForegroundState? Foreground,
-    IReadOnlyList<UiElement> Candidates);
+    IReadOnlyList<UiElement> Candidates,
+    int Redacted = 0);
 
 /// <param name="Plan">A usable plan, or null.</param>
 /// <param name="Failure">Why there is no plan, in words fit for logs (never shown to the user verbatim).</param>

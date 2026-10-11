@@ -104,7 +104,8 @@ public partial class App : Application
             sp.GetRequiredService<TargetResolver>(), sp.GetRequiredService<DoneEvaluator>(),
             sp.GetRequiredService<IOverlay>(), sp.GetRequiredService<ISpeaker>(),
             sp.GetRequiredService<ISessionView>(), sp.GetRequiredService<IUiDispatcher>(),
-            sp.GetRequiredService<TimeProvider>(), Process.GetCurrentProcess().ProcessName));
+            sp.GetRequiredService<TimeProvider>(), Process.GetCurrentProcess().ProcessName,
+            sp.GetRequiredService<ISnapshotSource>()));
         services.AddSingleton<SessionRunner>();
 
         return services.BuildServiceProvider();
