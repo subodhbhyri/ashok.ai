@@ -94,7 +94,7 @@ const encode = (value: unknown) => JSON.stringify(value).replace(/<\//g, "<\\/")
 export function buildUserMessage(input: PlannerInput): string {
   // The id is validated to lowercase letters, digits and hyphens before it gets here.
   const hint = input.playbookHint
-    ? [`<hint>This question also matched Ashok's built-in Windows guide "${input.playbookHint}", but the person is inside another app (see <screen>). Questions asked from inside an app are usually about that app: prefer the app's own way, such as its View or Zoom menu or its own settings. Use the Windows guide's route only if the question clearly asks about Windows itself or the whole screen.</hint>`]
+    ? [`<hint>This question also matched Ashok's built-in Windows guide "${input.playbookHint}", but the person is inside another app (see the screen section above). Questions asked from inside an app are usually about that app: prefer the app's own way, such as its View or Zoom menu or its own settings. Use the Windows guide's route only if the question clearly asks about Windows itself or the whole screen.</hint>`]
     : [];
   return [
     `<question>${encode(input.question)}</question>`,
