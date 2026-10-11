@@ -17,11 +17,14 @@
 
   <ItemGroup>
     <Using Include="Xunit" />
+    <Using Include="System.IO" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\Ashok.Windows\Ashok.Windows.csproj" />
     <ProjectReference Include="..\..\src\Ashok.Core\Ashok.Core.csproj" />
+    <ProjectReference Include="..\..\src\Ashok.UI\Ashok.UI.csproj" />
+    <ProjectReference Include="..\..\src\Ashok.Speech\Ashok.Speech.csproj" />
   </ItemGroup>
 
 </Project>

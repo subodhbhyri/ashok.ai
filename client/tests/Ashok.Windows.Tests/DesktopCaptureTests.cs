@@ -1,4 +1,3 @@
-using System.IO;
 using System.Diagnostics;
 using Ashok.Core.Capture;
 using Ashok.Core.Contracts;

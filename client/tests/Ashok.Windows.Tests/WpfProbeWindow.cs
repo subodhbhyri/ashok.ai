@@ -22,6 +22,11 @@ public sealed class WpfProbeWindow : IDisposable
 
     public IntPtr Handle { get; private set; }
 
+    /// <summary>Number of times the probe button received a click.</summary>
+    public int ClickCount => Volatile.Read(ref _clicks);
+
+    private int _clicks;
+
     public WpfProbeWindow()
     {
         _thread = new Thread(Run) { IsBackground = true, Name = "WpfProbeWindow" };
@@ -48,6 +53,7 @@ public sealed class WpfProbeWindow : IDisposable
         var password = new PasswordBox { Password = PasswordValue, Margin = new Thickness(8) };
         AutomationProperties.SetName(password, "Secret");
         _button = new Button { Content = "Probe", Width = ButtonWidthDip, Height = ButtonHeightDip, Margin = new Thickness(8) };
+        _button.Click += (_, _) => Interlocked.Increment(ref _clicks);
 
         var panel = new StackPanel();
         panel.Children.Add(edit);
@@ -57,6 +63,7 @@ public sealed class WpfProbeWindow : IDisposable
         _window = new Window
         {
             Title = "Ashok probe window",
+            Topmost = true, // stays visible above other windows so the overlay checks can see it
             Width = 400,
             Height = 300,
             Content = panel,

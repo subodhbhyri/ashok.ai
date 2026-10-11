@@ -1,9 +1,14 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <ItemGroup>
     <ProjectReference Include="..\Ashok.Core\Ashok.Core.csproj" />
     <ProjectReference Include="..\Ashok.Windows\Ashok.Windows.csproj" />
     <ProjectReference Include="..\Ashok.Speech\Ashok.Speech.csproj" />
+    <ProjectReference Include="..\Ashok.UI\Ashok.UI.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="10.0.0" />
   </ItemGroup>
 
   <PropertyGroup>
@@ -12,6 +17,17 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <UseWPF>true</UseWPF>
+    <!-- Only for NotifyIcon; WPF has no tray icon of its own. -->
+    <UseWindowsForms>true</UseWindowsForms>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <!-- WPF needs the manifest DPI setting; WinForms (tray icon only) suggests removing it. -->
+    <NoWarn>$(NoWarn);WFO0003</NoWarn>
   </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Keep WinForms/System.Drawing names from clashing with WPF's; TrayIcon.cs qualifies them explicitly. -->
+    <Using Remove="System.Windows.Forms" />
+    <Using Remove="System.Drawing" />
+  </ItemGroup>
 
 </Project>
