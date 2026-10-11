@@ -7,7 +7,12 @@
     "dev": "wrangler dev",
     "deploy": "wrangler deploy",
     "typecheck": "tsc --noEmit",
-    "test": "vitest run"
+    "test": "vitest run",
+    "build:validators": "node scripts/build-validators.mjs",
+    "pretest": "npm run build:validators",
+    "predev": "npm run build:validators",
+    "predeploy": "npm run build:validators",
+    "pretypecheck": "npm run build:validators"
   },
   "dependencies": {
     "hono": "^4.13.13"
@@ -16,7 +21,6 @@
     "@cloudflare/workers-types": "^5.20261011.1",
     "@types/node": "^26.6.5",
     "ajv": "^8.20.0",
-    "ajv-formats": "^3.0.1",
     "typescript": "^7.0.2",
     "vitest": "^5.0.3",
     "wrangler": "^4.149.0"
