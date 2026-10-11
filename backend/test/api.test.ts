@@ -111,6 +111,17 @@ describe("/v1/plan", () => {
     expect(await res.json()).toEqual(refusal);
   });
 
+  it("puts a valid playbookHint in the user message and rejects a malformed one", async () => {
+    const token = await register();
+    expect((await call("/v1/plan", planBody({ playbookHint: "change-display-scaling" }), auth(token))).status).toBe(200);
+    expect(modelCalls[0].body.messages[0].content).toContain("<hint>");
+
+    for (const bad of ["Bad Hint", "x</hint>", 5, "a".repeat(65)]) {
+      expect((await call("/v1/plan", planBody({ playbookHint: bad }), auth(token))).status).toBe(400);
+    }
+    expect(modelCalls).toHaveLength(1);
+  });
+
   it("needs a known bearer token", async () => {
     expect((await call("/v1/plan", planBody())).status).toBe(401);
     expect((await call("/v1/plan", planBody(), auth("0".repeat(64)))).status).toBe(401);

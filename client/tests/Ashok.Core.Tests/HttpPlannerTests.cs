@@ -211,6 +211,18 @@ public class HttpPlannerTests
     }
 
     [Fact]
+    public async Task MatchedPlaybook_IsSentAsAHint_AndOtherwiseTheFieldIsAbsent()
+    {
+        var handler = Worker(Fixture("plan/valid/bluetooth.json"));
+        await Planner(handler).PlanAsync(Request() with { MatchedPlaybookId = "change-display-scaling" }, default);
+        await Planner(handler).PlanAsync(Request(), default);
+
+        var bodies = handler.Seen.Where(s => !IsRegister(s.Request)).Select(s => JsonDocument.Parse(s.Body).RootElement).ToList();
+        Assert.Equal("change-display-scaling", bodies[0].GetProperty("playbookHint").GetString());
+        Assert.False(bodies[1].TryGetProperty("playbookHint", out _));
+    }
+
+    [Fact]
     public async Task NoScreenYet_SendsAnEmptyValidSnapshot()
     {
         var handler = Worker(Fixture("plan/valid/bluetooth.json"));

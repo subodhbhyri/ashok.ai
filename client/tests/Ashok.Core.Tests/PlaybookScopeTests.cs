@@ -48,9 +48,33 @@ public class PlaybookScopeTests
     }
 
     [Fact]
-    public async Task ARegularApp_StillGetsAPlaybookForAVeryCloseMatch_WithoutAnExtraCapture()
+    public async Task TextBiggerFromNotepad_AtTheRealModelsScore_GoesToThePlannerAndNamesTheMatchedPlaybook()
     {
-        var rig = NewRig(0.75, Scaling(), "notepad");
+        // The int8 model scores "make the text bigger" against change-display-scaling at 0.86-0.88.
+        var rig = NewRig(0.88, Scaling(), "notepad");
+
+        await rig.Session.AskAsync(Q, 11);
+
+        var request = Assert.Single(rig.Planner.Requests);
+        Assert.Equal("notepad", request.Foreground!.Process);
+        Assert.Equal("change-display-scaling", request.MatchedPlaybookId);
+    }
+
+    [Fact]
+    public async Task PlannerRequestsFromNoMatchOrOtherReplans_CarryNoHint()
+    {
+        var rig = new Rig([Scaling()]);
+        rig.Windows.Foreground = Rig.Screen("notepad", "Untitled", 11);
+
+        await rig.Session.AskAsync("something unrelated", 11);
+
+        Assert.Null(Assert.Single(rig.Planner.Requests).MatchedPlaybookId);
+    }
+
+    [Fact]
+    public async Task ARegularApp_StillGetsAPlaybookForAnExactMatch_WithoutAnExtraCapture()
+    {
+        var rig = NewRig(0.9, Scaling(), "notepad");
 
         await rig.Session.AskAsync(Q, 11);
 
@@ -68,6 +92,32 @@ public class PlaybookScopeTests
 
         Assert.Empty(rig.Planner.Requests);
         Assert.Equal(SessionPhase.Guiding, rig.Session.State.Phase);
+    }
+
+    private sealed class RecordingLog : IDebugLog
+    {
+        public List<(string? Process, string? Playbook, double? Score, string Path)> Lines { get; } = [];
+
+        public void Routed(DateTimeOffset at, string? process, string? playbookId, double? score, string path) =>
+            Lines.Add((process, playbookId, score, path));
+    }
+
+    [Fact]
+    public async Task EveryQuestionIsLogged_WithProcessMatchAndPath()
+    {
+        var log = new RecordingLog();
+        var book = Scaling();
+        var rig = new Rig([book], new FakeMatcher((Q, book.Id)) { Score = 0.88 }, debugLog: log);
+        rig.Windows.ByHandle[11] = new CapturedScreen(new ForegroundState("notepad", "t", 11), []);
+        rig.Windows.ByHandle[12] = new CapturedScreen(new ForegroundState("explorer", "t", 12), []);
+
+        await rig.Session.AskAsync(Q, 11);
+        await rig.Session.AskAsync(Q, 12);
+        await rig.Session.AskAsync("unmatched", 11);
+
+        Assert.Equal(
+            [("notepad", "change-display-scaling", 0.88, "planner"), ("explorer", "change-display-scaling", 0.88, "playbook"), ("notepad", null, null, "planner")],
+            log.Lines);
     }
 
     [Fact]

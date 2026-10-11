@@ -30,7 +30,8 @@ public sealed class GuidanceSession(
     IUiDispatcher dispatcher,
     TimeProvider time,
     string ownProcess,
-    ISnapshotSource? snapshots = null)
+    ISnapshotSource? snapshots = null,
+    IDebugLog? debugLog = null)
 {
     public const string NotSureMessage =
         "I'm not sure how to help with that yet. It might be best to ask someone you trust.";
@@ -40,9 +41,9 @@ public sealed class GuidanceSession(
 
     /// <summary>
     /// When the user is inside a regular app, a system playbook is used only for a match at least this close;
-    /// a weaker one goes to the planner, which can see the app. Explorer, Settings and the desktop keep the matcher's threshold.
+    /// a weaker one goes to the planner, which can see the app (and is told which playbook matched). Explorer, Settings and the desktop keep the matcher's threshold.
     /// </summary>
-    public const double AppWindowMinScore = 0.75;
+    public const double AppWindowMinScore = 0.9;
 
     public const string DoneMessage = "All done. Well done!";
 
@@ -93,23 +94,29 @@ public sealed class GuidanceSession(
         // AskAsync already runs off the UI thread (SessionRunner). The capture is skipped when a playbook
         // clearly wins: otherwise it also tells us whether the user is inside one of their own apps.
         CapturedScreen? screen = null;
+        string? overridden = null;
         if (playbook is null || NeedsAppCheck(playbook, match!))
         {
             screen = CapturePreviousWindow(previousWindow);
             if (playbook is not null && screen is not null && SystemSurfaces.IsRegularApp(screen.Foreground.Process))
+            {
+                overridden = playbook.Id;
                 playbook = null; // a system playbook must not override the app the user is in
+            }
         }
 
         lock (_gate)
         {
             if (epoch != _epoch) return;
+            debugLog?.Routed(time.GetUtcNow(), screen?.Foreground.Process, match?.PlaybookId, match?.Score,
+                playbook is not null ? "playbook" : "planner");
             if (playbook is not null)
             {
                 StartGuideLocked(playbook.Id, playbook.Steps);
                 return;
             }
         }
-        await ReplanAsync(PlanReason.New, epoch, screen);
+        await ReplanAsync(PlanReason.New, epoch, screen, overridden);
     }
 
     private static bool NeedsAppCheck(Playbook playbook, IntentMatch match) =>
@@ -222,7 +229,7 @@ public sealed class GuidanceSession(
 
     // ---- internals ------------------------------------------------------------------------------
 
-    private async Task ReplanAsync(PlanReason reason, int epoch, CapturedScreen? screen)
+    private async Task ReplanAsync(PlanReason reason, int epoch, CapturedScreen? screen, string? matchedPlaybookId = null)
     {
         CancellationToken token;
         PlanRequest request;
@@ -233,7 +240,7 @@ public sealed class GuidanceSession(
             token = _plannerCts.Token;
             HideRingLocked();
             Set(new SessionState(SessionPhase.Replanning, State.GuideId, State.StepIndex));
-            request = new PlanRequest(_question, reason, _history.ToList(), screen?.Foreground, screen?.Candidates ?? [], screen?.Redacted ?? 0);
+            request = new PlanRequest(_question, reason, _history.ToList(), screen?.Foreground, screen?.Candidates ?? [], screen?.Redacted ?? 0, matchedPlaybookId);
         }
 
         PlannerResult result;

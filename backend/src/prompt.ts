@@ -84,17 +84,24 @@ export interface PlannerInput {
   reason: "new" | "offPlan" | "stuck";
   history: unknown[];
   snapshot: unknown;
+  /** Id of a built-in Windows guide that matched the question while the person is inside another app. */
+  playbookHint?: string;
 }
 
 // JSON.stringify, then escape "</" so on-screen text can never close one of our tags.
 const encode = (value: unknown) => JSON.stringify(value).replace(/<\//g, "<\\/");
 
 export function buildUserMessage(input: PlannerInput): string {
+  // The id is validated to lowercase letters, digits and hyphens before it gets here.
+  const hint = input.playbookHint
+    ? [`<hint>A built-in guide for Windows itself ("${input.playbookHint}") matched this question, but the person is inside another app. Use it only if the question is really about Windows settings; if it is about the app in front, plan for that app.</hint>`]
+    : [];
   return [
     `<question>${encode(input.question)}</question>`,
     `<reason>${input.reason}</reason>`,
     `<history>${encode(input.history)}</history>`,
     `<screen>${encode(input.snapshot)}</screen>`,
+    ...hint,
     "Call submit_plan with the plan for this person.",
   ].join("\n");
 }

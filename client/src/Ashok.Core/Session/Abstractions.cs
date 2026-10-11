@@ -40,6 +40,20 @@ public interface IIntentMatcher
     IntentMatch? Match(string question);
 }
 
+/// <summary>A local, content-free record of how each question was routed. Never gets the question text or screen contents.</summary>
+public interface IDebugLog
+{
+    /// <param name="process">Foreground process of the captured window, or null when no capture was needed.</param>
+    void Routed(DateTimeOffset at, string? process, string? playbookId, double? score, string path);
+}
+
+public sealed class NullDebugLog : IDebugLog
+{
+    public void Routed(DateTimeOffset at, string? process, string? playbookId, double? score, string path)
+    {
+    }
+}
+
 public enum PlanReason { New, OffPlan, Stuck }
 
 public sealed record StepRecord(string StepId, string Say, bool Completed);
@@ -50,7 +64,8 @@ public sealed record PlanRequest(
     IReadOnlyList<StepRecord> History,
     ForegroundState? Foreground,
     IReadOnlyList<UiElement> Candidates,
-    int Redacted = 0);
+    int Redacted = 0,
+    string? MatchedPlaybookId = null);
 
 /// <param name="Plan">A usable plan, or null.</param>
 /// <param name="Failure">Why there is no plan, in words fit for logs (never shown to the user verbatim).</param>

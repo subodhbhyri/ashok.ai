@@ -49,3 +49,18 @@ describe("SYSTEM_PROMPT", () => {
     expect(SYSTEM_PROMPT).not.toMatch(/\$\{/);
   });
 });
+describe("playbook hint", () => {
+  const base = { question: "make the text bigger", reason: "new" as const, history: [], snapshot };
+
+  it("is absent unless given", () => {
+    expect(buildUserMessage(base)).not.toContain("<hint>");
+  });
+
+  it("is one line naming the playbook and leaving the choice to the planner", () => {
+    const message = buildUserMessage({ ...base, playbookHint: "change-display-scaling" });
+    expect(message.split("<hint>").length - 1).toBe(1);
+    expect(message).toContain('"change-display-scaling"');
+    expect(message).toContain("only if the question is really about Windows settings");
+    expect(message.indexOf("</hint>")).toBeLessThan(message.indexOf("Call submit_plan"));
+  });
+});

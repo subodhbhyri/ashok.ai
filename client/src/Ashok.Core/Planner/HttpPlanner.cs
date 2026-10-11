@@ -51,13 +51,14 @@ public sealed class HttpPlanner(
         if (token is null) return PlannerResult.Unavailable("could not register this install");
 
         var snapshot = BuildSnapshot(request);
-        var body = new
+        var body = new Dictionary<string, object?>
         {
-            question = request.Question,
-            snapshot,
-            history = request.History.Select(h => new { stepId = h.StepId, say = h.Say, completed = h.Completed }),
-            reason = JsonNamingPolicy.CamelCase.ConvertName(request.Reason.ToString()),
+            ["question"] = request.Question,
+            ["snapshot"] = snapshot,
+            ["history"] = request.History.Select(h => new { stepId = h.StepId, say = h.Say, completed = h.Completed }),
+            ["reason"] = JsonNamingPolicy.CamelCase.ConvertName(request.Reason.ToString()),
         };
+        if (request.MatchedPlaybookId is { } hint) body["playbookHint"] = hint;
 
         using var message = new HttpRequestMessage(HttpMethod.Post, "v1/plan")
         {

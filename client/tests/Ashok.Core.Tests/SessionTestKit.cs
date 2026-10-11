@@ -160,7 +160,7 @@ internal sealed class Rig
 
     public FakeWindows Windows { get; } = new();
 
-    public Rig(IEnumerable<Playbook> playbooks, FakeMatcher? matcher = null, IPlanner? planner = null, IOffPlanDetector? detector = null)
+    public Rig(IEnumerable<Playbook> playbooks, FakeMatcher? matcher = null, IPlanner? planner = null, IOffPlanDetector? detector = null, IDebugLog? debugLog = null)
     {
         var resolver = new TargetResolver();
         Session = new GuidanceSession(
@@ -170,7 +170,7 @@ internal sealed class Rig
             detector ?? new NaiveOffPlanDetector(),
             resolver,
             new DoneEvaluator(resolver),
-            Overlay, Speaker, View, new InlineDispatcher(), Time, Own, Windows);
+            Overlay, Speaker, View, new InlineDispatcher(), Time, Own, Windows, debugLog);
         Session.StateChanged += States.Add;
     }
 

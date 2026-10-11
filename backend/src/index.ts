@@ -74,9 +74,10 @@ app.post("/v1/plan", async (c) => {
   if (!parsed.ok) return c.json({ error: "bad request" }, parsed.status);
   const { body } = parsed;
 
-  const { question, reason, history, snapshot } = body;
+  const { question, reason, history, snapshot, playbookHint } = body;
   if (
-    !onlyKeys(body, ["question", "snapshot", "history", "reason"]) ||
+    !onlyKeys(body, ["question", "snapshot", "history", "reason", "playbookHint"]) ||
+    (playbookHint !== undefined && (typeof playbookHint !== "string" || !/^[a-z0-9]+(-[a-z0-9]+)*$/.test(playbookHint) || playbookHint.length > 64)) ||
     typeof question !== "string" || question.trim().length === 0 || question.length > MAX_QUESTION_CHARS ||
     typeof reason !== "string" || !REASONS.includes(reason) ||
     !Array.isArray(history) || history.length > MAX_HISTORY ||
@@ -99,6 +100,7 @@ app.post("/v1/plan", async (c) => {
     reason: reason as "new" | "offPlan" | "stuck",
     history,
     snapshot,
+    playbookHint: playbookHint as string | undefined,
   });
   // Metadata only: no question, snapshot or plan text is logged.
   console.log(JSON.stringify({ route: "plan", token: token.slice(0, 8), ok: result.ok, ms: Date.now() - started, ...result.usage }));
