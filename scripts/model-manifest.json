@@ -1,0 +1,34 @@
+{
+  "repository": "sentence-transformers/all-MiniLM-L6-v2",
+  "revision": "1110a243fdf4706b3f48f1d95db1a4f5529b4d41",
+  "files": [
+    {
+      "variant": "common",
+      "name": "vocab.txt",
+      "path": "vocab.txt",
+      "size": 231508,
+      "sha256": "07eced375cec144d27c900241f3e339478dec958f92fddbc551f295c992038a3"
+    },
+    {
+      "variant": "fp32",
+      "name": "model_fp32.onnx",
+      "path": "onnx/model.onnx",
+      "size": 90405214,
+      "sha256": "6fd5d72fe4589f189f8ebc006442dbb529bb7ce38f8082112682524616046452"
+    },
+    {
+      "variant": "qint8",
+      "name": "model_qint8.onnx",
+      "path": "onnx/model_qint8_avx512.onnx",
+      "size": 23026053,
+      "sha256": "4278337fd0ff3c68bfb6291042cad8ab363e1d9fbc43dcb499fe91c871902474"
+    },
+    {
+      "variant": "quint8",
+      "name": "model_quint8_avx2.onnx",
+      "path": "onnx/model_quint8_avx2.onnx",
+      "size": 23046789,
+      "sha256": "b941bf19f1f1283680f449fa6a7336bb5600bdcd5f84d10ddc5cd72218a0fd21"
+    }
+  ]
+}

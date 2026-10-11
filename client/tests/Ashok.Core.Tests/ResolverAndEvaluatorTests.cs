@@ -55,6 +55,35 @@ public class TargetResolverTests
     }
 
     [Fact]
+    public void Explorers_pinned_and_start_of_group_names_still_match_the_plain_name()
+    {
+        // Real names from Windows 11 File Explorer's sidebar.
+        var sidebar = Els.El("TreeItem", "Start of Quick Access - Downloads (pinned)");
+        var desktop = Els.El("TreeItem", "Desktop (pinned)", y: 100);
+
+        var best = Resolver.Best(Els.T("TreeItem", "Downloads"), [desktop, sidebar]);
+
+        Assert.Same(sidebar, best!.Element);
+        Assert.Equal(MatchKind.PartialName, best.How);
+    }
+
+    [Fact]
+    public void A_true_exact_name_outranks_a_partial_one()
+    {
+        var partial = Els.El("TreeItem", "Downloads (pinned)");
+        var exact = Els.El("TreeItem", "Downloads", y: 50);
+
+        Assert.Same(exact, Resolver.Best(Els.T("TreeItem", "Downloads"), [partial, exact])!.Element);
+    }
+
+    [Fact]
+    public void A_segment_match_needs_the_spaced_hyphen_so_Wi_Fi_is_unaffected()
+    {
+        Assert.Equal(MatchKind.ExactName, Resolver.Best(Els.T("Button", "Wi-Fi"), [Els.El("Button", "Wi-Fi")])!.How);
+        Assert.Null(Resolver.Best(Els.T("Button", "Fi"), [Els.El("Button", "Wi-Fi")]));
+    }
+
+    [Fact]
     public void A_shorter_name_does_not_match_a_longer_one_that_merely_starts_with_it()
     {
         // "Bluetooth" must not be satisfied by the navigation item "Bluetooth & devices".

@@ -1,0 +1,23 @@
+id: take-screenshot
+title: Take a screenshot
+os: [win11]
+examples:
+  - take a screenshot
+  - how do I capture my screen
+  - save a picture of my screen
+  - screen capture
+  - copy what is on my screen as a picture
+steps:
+  - id: s1
+    say: Press the Windows key, the Shift key and the letter S together.
+    action: pressKeys
+    keys: Win+Shift+S
+    doneWhen: { kind: windowOpened, process: SnippingTool }
+  - id: s2
+    say: Press and hold the mouse button, drag a box around what you want, then let go.
+    action: observe
+    doneWhen: { kind: userConfirms }
+  - id: s3
+    say: Your picture is copied. To use it, open a document or email and press Control and V together.
+    action: observe
+    doneWhen: { kind: userConfirms }

@@ -1,0 +1,44 @@
+id: pair-device
+title: Pair a Bluetooth device
+os: [win11]
+examples:
+  - pair a bluetooth device
+  - connect my bluetooth headphones
+  - how do I connect a bluetooth speaker
+  - add a bluetooth mouse
+  - connect wireless earbuds to my computer
+steps:
+  - id: s1
+    say: Press the Windows key and the letter I together to open Settings.
+    action: pressKeys
+    keys: Win+I
+    doneWhen: { kind: elementVisible, target: { role: ListItem, name: "Bluetooth & devices" } }
+  - id: s2
+    say: Click Bluetooth and devices on the left.
+    action: click
+    target: { role: ListItem, name: "Bluetooth & devices" }
+    doneWhen:
+      kind: elementVisible
+      target: { role: Button, name: Add device, automationId: SystemSettings_Device_Discovery_Button }
+  - id: s3
+    say: Click Add device.
+    action: click
+    target: { role: Button, name: Add device, automationId: SystemSettings_Device_Discovery_Button }
+    doneWhen:
+      kind: elementVisible
+      target: { role: Button, name: Bluetooth, automationId: BluetoothDevicesButton }
+  - id: s4
+    say: Click Bluetooth.
+    action: click
+    target: { role: Button, name: Bluetooth, automationId: BluetoothDevicesButton }
+    doneWhen:
+      kind: elementGone
+      target: { role: Button, name: Bluetooth, automationId: BluetoothDevicesButton }
+  - id: s5
+    say: Turn your device on and put it in pairing mode. When its name appears in the list, click it. Press Done after you click it.
+    action: observe
+    doneWhen: { kind: userConfirms }
+  - id: s6
+    say: If a code is shown, check it matches your device, then click Connect or Pair. Press Done when it says connected.
+    action: observe
+    doneWhen: { kind: userConfirms }

@@ -37,6 +37,7 @@ public static partial class Redaction
         {
             if (e.IsPassword) { redacted++; continue; }
             if (e.IsOffscreen || e.Width <= 0 || e.Height <= 0) continue;
+            if (IsListCell(e)) { redacted++; continue; }
 
             var name = e.Name ?? "";
             if (e.Role == "Text" && name.Length > MaxTextNameLength) continue;
@@ -59,6 +60,14 @@ public static partial class Redaction
 
     // Done before truncation so a cut can never leave half an address behind.
     private static string MaskEmails(string s) => EmailAddress().Replace(s, "[email]");
+
+    // Cells of classic list views (Environment Variables, Edit environment variable, ...) are named after
+    // their contents, so for a variable value or a path the "name" is the value itself.
+    [GeneratedRegex(@"^ListViewSubItem-\d+$")]
+    private static partial Regex ListCellId();
+
+    private static bool IsListCell(RawElement e) =>
+        (e.Role is "Text" or "Edit") && e.AutomationId is { } id && ListCellId().IsMatch(id);
 
     private static string Truncate(string s, int max)
     {

@@ -492,3 +492,6 @@ backend/dist/
 
 # Raw (pre-ranking) snapshots can contain on-screen text
 eval/snapshots/*.raw.json
+
+# Embedding model files (downloaded by scripts/fetch-model.ps1)
+client/models/

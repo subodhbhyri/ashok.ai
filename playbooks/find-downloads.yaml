@@ -1,0 +1,20 @@
+id: find-downloads
+title: Find your downloaded files
+os: [win11]
+examples:
+  - where are my downloads
+  - I cannot find the file I downloaded
+  - find my downloaded files
+  - where did my download go
+  - open the downloads folder
+steps:
+  - id: s1
+    say: Press the Windows key and the letter E together to open File Explorer.
+    action: pressKeys
+    keys: Win+E
+    doneWhen: { kind: windowOpened, process: explorer }
+  - id: s2
+    say: Click Downloads on the left side.
+    action: click
+    target: { role: TreeItem, name: Downloads }
+    doneWhen: { kind: elementVisible, target: { role: TabItem, name: Downloads } }

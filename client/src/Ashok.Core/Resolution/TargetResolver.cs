@@ -3,7 +3,7 @@ using Ashok.Core.Contracts;
 
 namespace Ashok.Core.Resolution;
 
-public enum MatchKind { AutomationId, ExactName, FuzzyName, RoleFallback }
+public enum MatchKind { AutomationId, ExactName, PartialName, FuzzyName, RoleFallback }
 
 /// <param name="Index">Position in the candidate list, i.e. document order.</param>
 public sealed record Resolved(UiElement Element, double Score, MatchKind How, int Index);
@@ -27,6 +27,9 @@ public sealed class TargetResolver
     public const double FuzzyThreshold = 0.8;
 
     private const double CompatibleRoleFactor = 0.85;
+
+    // A name that matches only after dropping a "(pinned)" suffix or a "Start of Quick Access - " prefix.
+    private const double PartialNameScore = 0.95;
 
     // Roles a user would treat as interchangeable "things to click". Text and Edit stand alone.
     private static readonly string[][] RoleGroups =
@@ -54,12 +57,19 @@ public sealed class TargetResolver
                 continue;
             }
 
-            var name = Normalize(element.Name);
+            var variants = NameVariants(element.Name);
+            var name = variants.Count > 0 ? variants[0] : "";
             if (name.Length == 0 || wanted.Length == 0) continue;
 
             if (name == wanted)
             {
                 matches.Add(new Resolved(element, roleFactor, roleFactor == 1 ? MatchKind.ExactName : MatchKind.RoleFallback, i));
+                continue;
+            }
+
+            if (variants.Skip(1).Contains(wanted))
+            {
+                matches.Add(new Resolved(element, PartialNameScore * roleFactor, MatchKind.PartialName, i));
                 continue;
             }
 
@@ -70,6 +80,35 @@ public sealed class TargetResolver
 
         return new ResolveResult(matches.OrderByDescending(m => m.Score).ThenBy(m => m.Index).ToList());
     }
+
+    /// <summary>
+    /// The normalized name first, then alternatives a user would still call the same thing: without
+    /// parenthesized text ("Downloads (pinned)" is "Downloads"), and each part of "A - B" on its own
+    /// (Explorer names its first sidebar item "Start of Quick Access - Downloads (pinned)").
+    /// </summary>
+    internal static IReadOnlyList<string> NameVariants(string raw)
+    {
+        var variants = new List<string>();
+        void Add(string s)
+        {
+            var n = Normalize(s);
+            if (n.Length > 0 && !variants.Contains(n)) variants.Add(n);
+        }
+
+        Add(raw);
+        Add(StripParentheses(raw));
+        var parts = raw.Split(" - ");
+        if (parts.Length > 1)
+            foreach (var part in parts)
+            {
+                Add(part);
+                Add(StripParentheses(part));
+            }
+        return variants;
+    }
+
+    private static string StripParentheses(string s) =>
+        System.Text.RegularExpressions.Regex.Replace(s, @"\([^)]*\)", " ");
 
     public Resolved? Best(Target target, IReadOnlyList<UiElement> candidates) => Resolve(target, candidates).Best;
 

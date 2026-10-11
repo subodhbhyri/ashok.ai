@@ -1,0 +1,24 @@
+id: open-downloaded-file
+title: Open a file you downloaded
+os: [win11]
+examples:
+  - open the file I downloaded
+  - how do I open a download
+  - I downloaded a file but cannot open it
+  - open a pdf I just downloaded
+  - run the installer I downloaded
+steps:
+  - id: s1
+    say: Press the Windows key and the letter E together to open File Explorer.
+    action: pressKeys
+    keys: Win+E
+    doneWhen: { kind: windowOpened, process: explorer }
+  - id: s2
+    say: Click Downloads on the left side.
+    action: click
+    target: { role: TreeItem, name: Downloads }
+    doneWhen: { kind: elementVisible, target: { role: TabItem, name: Downloads } }
+  - id: s3
+    say: Find the file in the list and double-click it. Press Done when it has opened.
+    action: observe
+    doneWhen: { kind: userConfirms }

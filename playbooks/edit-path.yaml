@@ -1,0 +1,46 @@
+id: edit-path
+title: Add a folder to the PATH variable
+os: [win11]
+examples:
+  - edit the path variable
+  - add a folder to PATH
+  - how do I change environment variables
+  - my command is not found so add it to the path
+  - set up the path for a program I installed
+steps:
+  - id: s1
+    say: Press the Windows key and the letter R together to open the Run box.
+    action: pressKeys
+    keys: Win+R
+    doneWhen: { kind: windowOpened, title: Run }
+  - id: s2
+    say: "Click the box and type: rundll32 sysdm.cpl,EditEnvironmentVariables  Then press Enter."
+    action: type
+    target: { role: Edit, name: "Open:", automationId: "1001" }
+    doneWhen: { kind: windowOpened, title: Environment Variables }
+  - id: s3
+    say: In the top list, click Path.
+    action: click
+    target: { role: ListItem, name: Path }
+    doneWhen: { kind: userConfirms }
+  - id: s4
+    say: Click Edit, just below that list.
+    action: click
+    target: { role: Button, name: "Edit...", automationId: "413" }
+    doneWhen:
+      kind: elementVisible
+      target: { role: Button, name: Move Up, automationId: "115" }
+  - id: s5
+    say: Click New.
+    action: click
+    target: { role: Button, name: New, automationId: "111" }
+    doneWhen: { kind: userConfirms }
+  - id: s6
+    say: Type the folder you want to add, then press Enter. Press Done when it is in the list.
+    action: observe
+    doneWhen: { kind: userConfirms }
+  - id: s7
+    say: Click OK. Then click OK again in the next window to save.
+    action: click
+    target: { role: Button, name: OK, automationId: "1" }
+    doneWhen: { kind: userConfirms }
