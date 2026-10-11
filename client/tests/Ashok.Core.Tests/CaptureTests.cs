@@ -52,6 +52,22 @@ public class RedactionTests
     }
 
     [Fact]
+    public void Email_addresses_are_masked_in_names() =>
+        Assert.Equal("Subodh Bhyri [email]",
+            Assert.Single(Redaction.Apply([Raw(name: "Subodh Bhyri someone@example.com")]).Candidates).Name);
+
+    [Fact]
+    public void Emails_are_masked_before_truncation()
+    {
+        var name = new string('a', 70) + " first.last+tag@mail.example.co.uk";
+
+        var cut = Assert.Single(Redaction.Apply([Raw(name: name)]).Candidates).Name;
+
+        Assert.DoesNotContain("@", cut);
+        Assert.DoesNotContain("first", cut.Replace("a", ""));
+    }
+
+    [Fact]
     public void Truncation_does_not_split_a_surrogate_pair()
     {
         var name = new string('a', 79) + "\U0001F600" + "tail"; // emoji straddles index 80

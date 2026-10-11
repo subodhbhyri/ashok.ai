@@ -20,7 +20,7 @@ public class DesktopCaptureTests(ITestOutputHelper output) : IDisposable
     }
 
     private UiaCapture CaptureFor(IntPtr hwnd) =>
-        new(new FixedForegroundProvider(Win32ForegroundWindowProvider.Describe(hwnd)), _source, new DocumentOrderRanker());
+        new(new FixedForegroundProvider(Win32ForegroundWindowProvider.Describe(hwnd)), _source, new HeuristicRanker());
 
     /// <summary>Launches something and returns the handle of the new top-level window it created.</summary>
     private IntPtr Launch(Action start, Func<string, string, bool> match)

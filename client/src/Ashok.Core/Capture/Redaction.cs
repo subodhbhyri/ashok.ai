@@ -1,3 +1,4 @@
+using System.Text.RegularExpressions;
 using Ashok.Core.Contracts;
 
 namespace Ashok.Core.Capture;
@@ -5,7 +6,7 @@ namespace Ashok.Core.Capture;
 public sealed record RedactionResult(IReadOnlyList<UiElement> Candidates, int Redacted);
 
 /// <summary>Privacy and size rules applied to raw elements before ranking.</summary>
-public static class Redaction
+public static partial class Redaction
 {
     public const int MaxNameLength = 80;
     public const int MaxTextNameLength = 200;
@@ -25,7 +26,7 @@ public static class Redaction
 
     /// <summary>
     /// Drops passwords (counted in Redacted), offscreen and zero-size elements, and overlong Text;
-    /// truncates names. Refs are assigned here, in input order, so raw and ranked output share them.
+    /// masks email addresses and truncates names. Refs are assigned here, in input order, so raw and ranked output share them.
     /// </summary>
     public static RedactionResult Apply(IEnumerable<RawElement> elements)
     {
@@ -43,7 +44,7 @@ public static class Redaction
             candidates.Add(new UiElement(
                 $"e{candidates.Count + 1}",
                 e.Role,
-                Truncate(name, MaxNameLength),
+                Truncate(MaskEmails(name), MaxNameLength),
                 string.IsNullOrEmpty(e.AutomationId) ? null : e.AutomationId,
                 [e.X, e.Y, e.Width, e.Height],
                 e.Enabled,
@@ -52,6 +53,12 @@ public static class Redaction
 
         return new RedactionResult(candidates, redacted);
     }
+
+    [GeneratedRegex(@"[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}")]
+    private static partial Regex EmailAddress();
+
+    // Done before truncation so a cut can never leave half an address behind.
+    private static string MaskEmails(string s) => EmailAddress().Replace(s, "[email]");
 
     private static string Truncate(string s, int max)
     {

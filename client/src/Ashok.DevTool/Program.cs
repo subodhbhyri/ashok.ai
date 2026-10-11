@@ -37,7 +37,7 @@ for (var s = delay; s > 0; s--)
 }
 
 using var source = new FlaUiElementSource();
-var capture = new UiaCapture(new Win32ForegroundWindowProvider(), source, new DocumentOrderRanker());
+var capture = new UiaCapture(new Win32ForegroundWindowProvider(), source, new HeuristicRanker());
 
 var sw = Stopwatch.StartNew();
 var snapshot = capture.Capture();
