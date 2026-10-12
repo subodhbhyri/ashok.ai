@@ -58,7 +58,7 @@ public sealed class HeuristicOffPlanDetector : IOffPlanDetector
         "SystemSettingsAdminFlows",      // Settings' elevated helpers
     };
 
-    private readonly Queue<DateTimeOffset> _replans = new();
+    private readonly List<DateTimeOffset> _replans = [];
 
     /// <summary>"other-app", "target-lost" or "stuck": why the last OffPlan or Stuck verdict was returned.</summary>
     public string? LastReason { get; private set; }
@@ -149,14 +149,20 @@ public sealed class HeuristicOffPlanDetector : IOffPlanDetector
         return context.TargetOnScreen == true ? StuckWithRing : StuckWithoutRing;
     }
 
+    /// <summary>Removes the most recent budget entry if it was made at <paramref name="at"/>; anything else is left alone.</summary>
+    public void Refund(DateTimeOffset at)
+    {
+        if (_replans.Count > 0 && _replans[^1] == at) _replans.RemoveAt(_replans.Count - 1);
+    }
+
     private OffPlanVerdict Spend(OffPlanVerdict verdict, string reason, DateTimeOffset now)
     {
-        while (_replans.Count > 0 && now - _replans.Peek() >= ReplanWindow) _replans.Dequeue();
+        while (_replans.Count > 0 && now - _replans[0] >= ReplanWindow) _replans.RemoveAt(0);
 
-        var tooSoon = _replans.Count > 0 && now - _replans.Last() < MinGapBetweenReplans;
+        var tooSoon = _replans.Count > 0 && now - _replans[^1] < MinGapBetweenReplans;
         if (tooSoon || _replans.Count >= MaxReplansPerWindow) return OffPlanVerdict.OnPlan;
 
-        _replans.Enqueue(now);
+        _replans.Add(now);
         LastReason = reason;
         return verdict;
     }

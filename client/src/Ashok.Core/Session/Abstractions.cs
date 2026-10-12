@@ -141,4 +141,9 @@ public interface IOffPlanDetector
 
     /// <summary>Why the last OffPlan or Stuck verdict was returned, for the debug log. Detectors that do not track it return null.</summary>
     string? LastReason => null;
+
+    /// <summary>Gives back the budget the verdict returned at <paramref name="at"/> used, because the session acted on it without replanning.</summary>
+    void Refund(DateTimeOffset at)
+    {
+    }
 }

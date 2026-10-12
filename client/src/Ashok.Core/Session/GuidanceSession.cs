@@ -212,6 +212,7 @@ public sealed class GuidanceSession(
                 debugLog?.Verdict(now, verdict, offPlan.LastReason, screen.Foreground.Process, current.Id,
                     (now - _run.StartedAt).TotalSeconds, "nudge");
                 _run.Nudged = true;
+                offPlan.Refund(now); // a nudge is not a replan, so it must not use up the budget
                 offPlan.Reset(now);
                 AnnounceLocked(current, "No rush. ");
                 return;

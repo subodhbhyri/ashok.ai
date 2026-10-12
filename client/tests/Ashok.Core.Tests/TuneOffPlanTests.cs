@@ -139,6 +139,30 @@ public class TuneOffPlanTests
     }
 
     [Fact]
+    public async Task Nudges_do_not_use_the_replan_budget_five_nudge_then_replan_cycles_still_allow_four_replans()
+    {
+        var log = new Log();
+        var rig = NewRig(WithRing(), log);
+        rig.Planner.Handler = (_, _) => Task.FromResult(new PlannerResult(
+            new Plan("again", [Step("p1", Visible("Button", "Never"), new Target(null, "Button", "Go", null), say: "Click Go.")], 1, false, null), null));
+        await rig.Session.AskAsync(Q, 0);
+
+        for (var cycle = 0; cycle < 5; cycle++)
+        {
+            await rig.Tick(Screen("SystemSettings", 1, Button("Go")));
+            rig.Time.Advance(S(41));
+            await rig.Tick(Screen("SystemSettings", 1, Button("Go"))); // nudge
+            rig.Time.Advance(S(41));
+            await rig.Tick(Screen("SystemSettings", 1, Button("Go"))); // replan, unless the budget is spent
+        }
+
+        Assert.Equal(4, rig.Planner.Requests.Count);
+        Assert.Equal(4, log.Verdicts.Count(v => v.Action == "replan"));
+        // The fifth cycle's Stuck is held back by the spent budget before the session sees it, so it gets no nudge either.
+        Assert.Equal(4, log.Verdicts.Count(v => v.Action == "nudge"));
+    }
+
+    [Fact]
     public async Task A_new_step_can_be_nudged_again()
     {
         var book = Book("x",
