@@ -261,6 +261,59 @@ public class HeuristicOffPlanDetectorTests
         Assert.Equal("other-app", detector.LastReason);
     }
 
+    // Spends the whole budget (four Stuck verdicts, 25 s apart) and returns the clock and the time of the last one.
+    private static (HeuristicOffPlanDetector Detector, Clock Clock, TimeSpan Last) SpendBudget()
+    {
+        var (detector, c) = Start(KeysStep);
+        var t = S(0);
+        for (var i = 0; i < HeuristicOffPlanDetector.MaxReplansPerWindow; i++)
+        {
+            detector.Reset(T0 + t);
+            c.StepStart = T0 + t;
+            c.At(t, target: null);
+            t += S(25);
+            Assert.Equal(OffPlanVerdict.Stuck, c.At(t, target: null));
+        }
+        return (detector, c, t);
+    }
+
+    private static OffPlanVerdict NextStuck(HeuristicOffPlanDetector detector, Clock c, TimeSpan from)
+    {
+        detector.Reset(T0 + from);
+        c.StepStart = T0 + from;
+        c.At(from, target: null);
+        return c.At(from + S(25), target: null);
+    }
+
+    [Fact]
+    public void Without_a_refund_the_fifth_verdict_in_the_window_is_suppressed()
+    {
+        var (detector, c, last) = SpendBudget();
+
+        Assert.Equal(OffPlanVerdict.OnPlan, NextStuck(detector, c, last));
+    }
+
+    [Fact]
+    public void Refund_gives_back_the_most_recent_entry()
+    {
+        var (detector, c, last) = SpendBudget();
+
+        detector.Refund(T0 + last);
+
+        Assert.Equal(OffPlanVerdict.Stuck, NextStuck(detector, c, last));
+    }
+
+    [Fact]
+    public void Refund_ignores_a_timestamp_that_is_not_the_most_recent_entry()
+    {
+        var (detector, c, last) = SpendBudget();
+
+        detector.Refund(T0 + last - S(25)); // an older entry: left alone
+        detector.Refund(T0 + last + S(1));  // no entry at all: nothing to give back
+
+        Assert.Equal(OffPlanVerdict.OnPlan, NextStuck(detector, c, last));
+    }
+
     // Puts another app in front long enough to count, from the given time.
     private static OffPlanVerdict Away(Clock c, TimeSpan from, long handle = 7)
     {

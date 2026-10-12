@@ -46,8 +46,8 @@ public interface IDebugLog
     /// <param name="process">Foreground process of the captured window, or null when no capture was needed.</param>
     void Routed(DateTimeOffset at, string? process, string? playbookId, double? score, string path);
 
-    /// <summary>A replan verdict during guidance. Only ids, names and numbers: never screen contents.</summary>
-    void Verdict(DateTimeOffset at, OffPlanVerdict verdict, string? reason, string process, string stepId, double secondsIntoStep);
+    /// <summary>A replan verdict during guidance; <c>action</c> is "replan" or "nudge" (a gentle re-announce instead). Only ids, names and numbers: never screen contents.</summary>
+    void Verdict(DateTimeOffset at, OffPlanVerdict verdict, string? reason, string process, string stepId, double secondsIntoStep, string action = "replan");
 
     /// <summary>UI Automation was disposed and recreated after repeated bad reads. Process name and HRESULT only.</summary>
     void AutomationReset(DateTimeOffset at, string process, int hresult);
@@ -59,7 +59,7 @@ public sealed class NullDebugLog : IDebugLog
     {
     }
 
-    public void Verdict(DateTimeOffset at, OffPlanVerdict verdict, string? reason, string process, string stepId, double secondsIntoStep)
+    public void Verdict(DateTimeOffset at, OffPlanVerdict verdict, string? reason, string process, string stepId, double secondsIntoStep, string action = "replan")
     {
     }
 
@@ -141,4 +141,9 @@ public interface IOffPlanDetector
 
     /// <summary>Why the last OffPlan or Stuck verdict was returned, for the debug log. Detectors that do not track it return null.</summary>
     string? LastReason => null;
+
+    /// <summary>Gives back the budget the verdict returned at <paramref name="at"/> used, because the session acted on it without replanning.</summary>
+    void Refund(DateTimeOffset at)
+    {
+    }
 }
