@@ -67,7 +67,15 @@ public sealed class FocusedElementProbe : IFocusProbe, IDisposable
 
     private FocusedElement? GetOnce()
     {
-        var element = _automation.FocusedElement();
+        AutomationElement? element;
+        try
+        {
+            element = _automation.FocusedElement();
+        }
+        catch (InvalidOperationException)
+        {
+            return null; // UI Automation says the focus is in a state it cannot report: nothing is focused
+        }
         if (element is null) return null;
 
         {

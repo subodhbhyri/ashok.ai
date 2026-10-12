@@ -15,10 +15,12 @@ public class PlaybookFixesTests
 
     // ---- opposite intent ----
 
+    private static readonly string[] AvoidOff = ["turn off", "switch off", "turn it off", "switch it off", "disable", "disconnect", "stop"];
+
     private static Playbook Bluetooth(params string[] avoid) =>
         Book("bluetooth-on", Step("s1", Confirm())) with
         {
-            Examples = ["turn on bluetooth", "enable bluetooth"],
+            Examples = ["turn on bluetooth", "enable bluetooth", "my bluetooth is off"],
             AvoidWords = avoid.Length == 0 ? null : avoid,
         };
 
@@ -35,6 +37,31 @@ public class PlaybookFixesTests
         Assert.Equal("bluetooth-on", matcher.Match("how do I turn on bluetooth")?.PlaybookId);
         Assert.Null(matcher.Match("how do I turn off bluetooth"));
         Assert.DoesNotContain(matcher.Rank("how do I turn off bluetooth"), s => s.PlaybookId == "bluetooth-on");
+    }
+
+    [Fact]
+    public void My_bluetooth_is_off_still_matches_but_asking_to_turn_it_off_does_not()
+    {
+        var matcher = Matcher(Bluetooth(AvoidOff));
+
+        Assert.Equal("bluetooth-on", matcher.Match("my bluetooth is off")?.PlaybookId);
+        Assert.Null(matcher.Match("how do I turn off bluetooth"));
+        Assert.DoesNotContain(matcher.Rank("switch it off"), s => s.PlaybookId == "bluetooth-on");
+        Assert.DoesNotContain(matcher.Rank("please switch it off now"), s => s.PlaybookId == "bluetooth-on");
+    }
+
+    [Theory]
+    [InlineData("TURN   OFF bluetooth", true)]
+    [InlineData("turn the bluetooth off", false)]   // not adjacent: not the phrase
+    [InlineData("turn offline mode on", false)]     // "offline" is not "off"
+    [InlineData("It is off, so Turn It Off!", true)]
+    [InlineData("stop", true)]
+    [InlineData("stopwatch", false)]
+    public void Phrases_match_as_whole_word_sequences_ignoring_case(string question, bool avoided)
+    {
+        var words = System.Text.RegularExpressions.Regex.Matches(question, @"[\p{L}\p{N}']+").Select(m => m.Value).ToList();
+
+        Assert.Equal(avoided, AvoidOff.Any(phrase => EmbeddingIntentMatcher.ContainsPhrase(words, phrase)));
     }
 
     [Fact]
@@ -100,7 +127,9 @@ public class PlaybookFixesTests
         Assert.Equal(["off", "stop"], PlaybookLoader.Parse(With("avoidWords: [off, stop]\n"), "x").AvoidWords);
         Assert.Null(PlaybookLoader.Parse(With(""), "x").AvoidWords);
         Assert.Throws<PlaybookException>(() => PlaybookLoader.Parse(With("avoidWords: []\n"), "x"));
-        Assert.Throws<PlaybookException>(() => PlaybookLoader.Parse(With("avoidWords: [\"turn off\"]\n"), "x"));
+        Assert.Equal(["turn off"], PlaybookLoader.Parse(With("avoidWords: [\"turn off\"]\n"), "x").AvoidWords);
+        Assert.Throws<PlaybookException>(() => PlaybookLoader.Parse(With("avoidWords: [\"turn  off\"]\n"), "x"));
+        Assert.Throws<PlaybookException>(() => PlaybookLoader.Parse(With("avoidWords: [\"turn-off\"]\n"), "x"));
     }
 
     // ---- already done ----

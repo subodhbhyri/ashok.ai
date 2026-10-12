@@ -83,6 +83,8 @@ public class ModelMatcherTests(ITestOutputHelper output)
         ("tell me a joke", null),
         ("how do I turn off bluetooth", null),
         ("disable bluetooth", null),
+        ("switch bluetooth off", null),
+        ("my bluetooth has been turned off, please fix it", "bluetooth-on"),
         ("stop the bluetooth from connecting", null),
         ("restart my computer", null),
         ("update windows", null),

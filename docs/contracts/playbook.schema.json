@@ -14,11 +14,11 @@
       "enum": ["system", "app"]
     },
     "avoidWords": {
-      "description": "Whole words (case-insensitive) that mean the person wants the opposite of what this playbook does. A question containing any of them never matches this playbook.",
+      "description": "Words or phrases (whole-word sequences, case-insensitive) that mean the person wants the opposite of what this playbook does. A question containing any of them never matches this playbook.",
       "type": "array",
       "minItems": 1,
       "uniqueItems": true,
-      "items": { "type": "string", "pattern": "^[A-Za-z]+$" }
+      "items": { "type": "string", "pattern": "^[A-Za-z]+( [A-Za-z]+)*$" }
     },
     "os": {
       "type": "array",

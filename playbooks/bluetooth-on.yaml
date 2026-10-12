@@ -1,12 +1,12 @@
 id: bluetooth-on
 title: Turn Bluetooth on
 scope: system
-avoidWords: [off, disable, disconnect, stop]
+avoidWords: ["turn off", "switch off", "turn it off", "switch it off", disable, disconnect, stop]
 os: [win11]
 examples:
   - turn on bluetooth
   - how do I switch bluetooth on
-  - my bluetooth is not switched on
+  - my bluetooth is off
   - enable bluetooth on my computer
   - bluetooth is not working
 steps:

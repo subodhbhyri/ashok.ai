@@ -67,11 +67,25 @@ public sealed class EmbeddingIntentMatcher : IIntentMatcher
     private HashSet<string> AvoidedPlaybooks(string question)
     {
         var words = System.Text.RegularExpressions.Regex.Matches(question, @"[\p{L}\p{N}']+")
-            .Select(m => m.Value).ToHashSet(StringComparer.OrdinalIgnoreCase);
+            .Select(m => m.Value).ToList();
         return _playbooks
-            .Where(p => p.AvoidWords is { } avoid && avoid.Any(words.Contains))
+            .Where(p => p.AvoidWords is { } avoid && avoid.Any(phrase => ContainsPhrase(words, phrase)))
             .Select(p => p.Id)
             .ToHashSet();
+    }
+
+    /// <summary>True when the phrase's words appear next to each other, in order, as whole words (case-insensitive).</summary>
+    public static bool ContainsPhrase(IReadOnlyList<string> words, string phrase)
+    {
+        var wanted = phrase.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+        for (var start = 0; start + wanted.Length <= words.Count; start++)
+        {
+            var all = true;
+            for (var i = 0; i < wanted.Length && all; i++)
+                all = string.Equals(words[start + i], wanted[i], StringComparison.OrdinalIgnoreCase);
+            if (all) return true;
+        }
+        return false;
     }
 
     private IReadOnlyList<(string, float[])> BuildIndex()
