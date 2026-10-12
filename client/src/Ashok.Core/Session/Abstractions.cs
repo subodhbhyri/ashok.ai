@@ -48,6 +48,9 @@ public interface IDebugLog
 
     /// <summary>A replan verdict during guidance. Only ids, names and numbers: never screen contents.</summary>
     void Verdict(DateTimeOffset at, OffPlanVerdict verdict, string? reason, string process, string stepId, double secondsIntoStep);
+
+    /// <summary>UI Automation was disposed and recreated after repeated bad reads. Process name and HRESULT only.</summary>
+    void AutomationReset(DateTimeOffset at, string process, int hresult);
 }
 
 public sealed class NullDebugLog : IDebugLog
@@ -57,6 +60,10 @@ public sealed class NullDebugLog : IDebugLog
     }
 
     public void Verdict(DateTimeOffset at, OffPlanVerdict verdict, string? reason, string process, string stepId, double secondsIntoStep)
+    {
+    }
+
+    public void AutomationReset(DateTimeOffset at, string process, int hresult)
     {
     }
 }

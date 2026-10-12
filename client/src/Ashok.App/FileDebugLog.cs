@@ -19,6 +19,9 @@ public sealed class FileDebugLog(string? path = null) : IDebugLog
         Append(string.Create(CultureInfo.InvariantCulture,
             $"{at:O} verdict={verdict} reason={reason ?? "-"} process={process} step={stepId} secs={secondsIntoStep:F1}"));
 
+    public void AutomationReset(DateTimeOffset at, string process, int hresult) =>
+        Append(string.Create(CultureInfo.InvariantCulture, $"{at:O} automation-reset process={process} hresult=0x{hresult:X8}"));
+
     public void Routed(DateTimeOffset at, string? process, string? playbookId, double? score, string path)
     {
         var line = string.Create(CultureInfo.InvariantCulture,

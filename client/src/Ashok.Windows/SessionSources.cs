@@ -42,22 +42,34 @@ public sealed class CandidateSource(
 /// <summary>The element with keyboard focus, for focusOn steps. Applies the same redaction as candidates.</summary>
 public sealed class FocusedElementProbe : IFocusProbe, IDisposable
 {
-    private readonly UIA3Automation _automation = new();
+    private UIA3Automation _automation = new();
+    private readonly CaptureRepairGuard _guard;
+    private readonly IDebugLog? _log;
 
-    public FocusedElement? Get()
+    public FocusedElementProbe(IDebugLog? log = null)
     {
-        AutomationElement? element;
-        try
-        {
-            element = _automation.FocusedElement();
-        }
-        catch (System.Runtime.InteropServices.COMException)
-        {
-            return null;
-        }
+        _log = log;
+        _guard = new CaptureRepairGuard(ResetAutomation);
+    }
+
+    /// <summary>Bad reads are retried once and repeated ones recreate the automation object; what still fails reads as "nothing focused".</summary>
+    public FocusedElement? Get() => _guard.Run<FocusedElement?>(0, GetOnce, swallow: true, whenSwallowed: null);
+
+    private void ResetAutomation(int hresult)
+    {
+        var old = _automation;
+        _automation = new UIA3Automation();
+        try { old.Dispose(); } catch (Exception) { } // already broken
+        _log?.AutomationReset(DateTimeOffset.UtcNow, FlaUiElementSource.ProcessOf(NativeForeground()), hresult);
+    }
+
+    private static IntPtr NativeForeground() => new Win32ForegroundWindowProvider().Get()?.Handle ?? IntPtr.Zero;
+
+    private FocusedElement? GetOnce()
+    {
+        var element = _automation.FocusedElement();
         if (element is null) return null;
 
-        try
         {
             var bounds = element.Properties.BoundingRectangle.ValueOrDefault;
             var raw = new RawElement(
@@ -72,10 +84,6 @@ public sealed class FocusedElementProbe : IFocusProbe, IDisposable
             // Redaction may drop it (passwords, list cells named after their values): then nothing is focused.
             var safe = Redaction.Apply([raw]).Candidates.FirstOrDefault();
             return safe is null ? null : new FocusedElement(safe.Role, safe.Name, safe.AutomationId);
-        }
-        catch (System.Runtime.InteropServices.COMException)
-        {
-            return null;
         }
     }
 

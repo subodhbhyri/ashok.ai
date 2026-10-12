@@ -47,6 +47,9 @@ internal sealed class TestDebugLog(ITestOutputHelper output) : IDebugLog
     public void Routed(DateTimeOffset at, string? process, string? playbookId, double? score, string path) =>
         output.WriteLine($"    LOG routed process={process ?? "-"} playbook={playbookId ?? "-"} path={path}");
 
+    public void AutomationReset(DateTimeOffset at, string process, int hresult) =>
+        output.WriteLine($"    LOG automation-reset process={process} hresult=0x{hresult:X8}");
+
     public void Verdict(DateTimeOffset at, OffPlanVerdict verdict, string? reason, string process, string stepId, double secondsIntoStep) =>
         output.WriteLine($"    LOG verdict={verdict} reason={reason ?? "-"} process={process} step={stepId} secs={secondsIntoStep:F1}");
 }
@@ -268,13 +271,14 @@ public class PlaybookEndToEndTests(ITestOutputHelper output) : IDisposable
         var planner = new PlannerTripwire();
         var script = ScriptFor(id, user);
 
-        using var source = new FlaUiElementSource();
+        var log = new TestDebugLog(output);
+        using var source = new FlaUiElementSource(log);
         var screens = new CandidateSource(desk, source);
         var session = new GuidanceSession(
             new EmbeddingIntentMatcher(new HashingEmbedder(), store.All, threshold: 0.35),
             store, planner, new HeuristicOffPlanDetector(), resolver, new DoneEvaluator(resolver),
-            overlay, new SilentSpeaker(), new RecordingView(), new InlineUi(), TimeProvider.System, "no-such-process", snapshots: null, debugLog: new TestDebugLog(output));
-        using var focus = new FocusedElementProbe();
+            overlay, new SilentSpeaker(), new RecordingView(), new InlineUi(), TimeProvider.System, "no-such-process", snapshots: null, debugLog: log);
+        using var focus = new FocusedElementProbe(log);
         using var runner = new SessionRunner(session, screens, focus, new WinEventWatcher());
         runner.Error += e => output.WriteLine(DescribeError(e));
         _cleanup.Add(() => { foreach (var h in user.Opened) TestNative.Close(h); });

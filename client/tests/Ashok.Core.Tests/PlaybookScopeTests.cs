@@ -104,6 +104,10 @@ public class PlaybookScopeTests
         public void Verdict(DateTimeOffset at, OffPlanVerdict verdict, string? reason, string process, string stepId, double secondsIntoStep)
         {
         }
+
+        public void AutomationReset(DateTimeOffset at, string process, int hresult)
+        {
+        }
     }
 
     [Fact]
@@ -129,6 +133,10 @@ public class PlaybookScopeTests
         public List<(OffPlanVerdict Verdict, string? Reason, string Process, string Step, double Secs)> Lines { get; } = [];
 
         public void Routed(DateTimeOffset at, string? process, string? playbookId, double? score, string path)
+        {
+        }
+
+        public void AutomationReset(DateTimeOffset at, string process, int hresult)
         {
         }
 

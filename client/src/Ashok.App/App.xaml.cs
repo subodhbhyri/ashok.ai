@@ -93,6 +93,7 @@ public partial class App : Application
         services.AddSingleton<IOffPlanDetector, HeuristicOffPlanDetector>();
         services.AddSingleton<TargetResolver>();
         services.AddSingleton<DoneEvaluator>();
+        services.AddSingleton<IDebugLog, FileDebugLog>();
         services.AddSingleton<IElementSource, FlaUiElementSource>();
         services.AddSingleton<ISnapshotSource, CandidateSource>();
         services.AddSingleton<IFocusProbe, FocusedElementProbe>();
@@ -105,7 +106,7 @@ public partial class App : Application
             sp.GetRequiredService<IOverlay>(), sp.GetRequiredService<ISpeaker>(),
             sp.GetRequiredService<ISessionView>(), sp.GetRequiredService<IUiDispatcher>(),
             sp.GetRequiredService<TimeProvider>(), Process.GetCurrentProcess().ProcessName,
-            sp.GetRequiredService<ISnapshotSource>(), new FileDebugLog()));
+            sp.GetRequiredService<ISnapshotSource>(), sp.GetRequiredService<IDebugLog>()));
         services.AddSingleton<SessionRunner>();
 
         return services.BuildServiceProvider();
