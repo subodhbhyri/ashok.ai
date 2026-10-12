@@ -15,7 +15,7 @@ public class PlaybookFixesTests
 
     // ---- opposite intent ----
 
-    private static readonly string[] AvoidOff = ["turn off", "switch off", "turn it off", "switch it off", "disable", "disconnect", "stop"];
+    private static readonly string[] AvoidOff = ["turn * off", "switch * off", "disable", "disconnect", "stop"];
 
     private static Playbook Bluetooth(params string[] avoid) =>
         Book("bluetooth-on", Step("s1", Confirm())) with
@@ -45,14 +45,24 @@ public class PlaybookFixesTests
         var matcher = Matcher(Bluetooth(AvoidOff));
 
         Assert.Equal("bluetooth-on", matcher.Match("my bluetooth is off")?.PlaybookId);
+        Assert.Equal("bluetooth-on", matcher.Match("turn on bluetooth")?.PlaybookId);
         Assert.Null(matcher.Match("how do I turn off bluetooth"));
+        Assert.Null(matcher.Match("how do I switch bluetooth off"));
+        Assert.DoesNotContain(matcher.Rank("turn the bluetooth off"), s => s.PlaybookId == "bluetooth-on");
         Assert.DoesNotContain(matcher.Rank("switch it off"), s => s.PlaybookId == "bluetooth-on");
         Assert.DoesNotContain(matcher.Rank("please switch it off now"), s => s.PlaybookId == "bluetooth-on");
     }
 
     [Theory]
     [InlineData("TURN   OFF bluetooth", true)]
-    [InlineData("turn the bluetooth off", false)]   // not adjacent: not the phrase
+    [InlineData("turn the bluetooth off", true)]    // the * covers up to two words
+    [InlineData("turn off", true)]
+    [InlineData("turn it off", true)]
+    [InlineData("switch bluetooth off", true)]
+    [InlineData("turn the old bluetooth thing off", false)] // three words between: too far
+    [InlineData("my bluetooth is off", false)]
+    [InlineData("turn on bluetooth", false)]
+    [InlineData("turn the thing on and then off", false)]
     [InlineData("turn offline mode on", false)]     // "offline" is not "off"
     [InlineData("It is off, so Turn It Off!", true)]
     [InlineData("stop", true)]
@@ -128,6 +138,9 @@ public class PlaybookFixesTests
         Assert.Null(PlaybookLoader.Parse(With(""), "x").AvoidWords);
         Assert.Throws<PlaybookException>(() => PlaybookLoader.Parse(With("avoidWords: []\n"), "x"));
         Assert.Equal(["turn off"], PlaybookLoader.Parse(With("avoidWords: [\"turn off\"]\n"), "x").AvoidWords);
+        Assert.Equal(["turn * off"], PlaybookLoader.Parse(With("avoidWords: [\"turn * off\"]\n"), "x").AvoidWords);
+        Assert.Throws<PlaybookException>(() => PlaybookLoader.Parse(With("avoidWords: [\"turn *\"]\n"), "x"));
+        Assert.Throws<PlaybookException>(() => PlaybookLoader.Parse(With("avoidWords: [\"* off\"]\n"), "x"));
         Assert.Throws<PlaybookException>(() => PlaybookLoader.Parse(With("avoidWords: [\"turn  off\"]\n"), "x"));
         Assert.Throws<PlaybookException>(() => PlaybookLoader.Parse(With("avoidWords: [\"turn-off\"]\n"), "x"));
     }

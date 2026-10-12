@@ -74,18 +74,33 @@ public sealed class EmbeddingIntentMatcher : IIntentMatcher
             .ToHashSet();
     }
 
-    /// <summary>True when the phrase's words appear next to each other, in order, as whole words (case-insensitive).</summary>
+    /// <summary>Most words a <c>*</c> in an avoid phrase may stand for.</summary>
+    public const int MaxWildcardWords = 2;
+
+    /// <summary>
+    /// True when the phrase's words appear in order as whole words (case-insensitive). A <c>*</c> between words
+    /// matches 0 to <see cref="MaxWildcardWords"/> words, so "turn * off" covers "turn off", "turn it off" and "turn the bluetooth off".
+    /// </summary>
     public static bool ContainsPhrase(IReadOnlyList<string> words, string phrase)
     {
-        var wanted = phrase.Split(' ', StringSplitOptions.RemoveEmptyEntries);
-        for (var start = 0; start + wanted.Length <= words.Count; start++)
-        {
-            var all = true;
-            for (var i = 0; i < wanted.Length && all; i++)
-                all = string.Equals(words[start + i], wanted[i], StringComparison.OrdinalIgnoreCase);
-            if (all) return true;
-        }
+        var tokens = phrase.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+        for (var start = 0; start < words.Count; start++)
+            if (MatchesAt(words, start, tokens, 0)) return true;
         return false;
+    }
+
+    private static bool MatchesAt(IReadOnlyList<string> words, int at, string[] tokens, int token)
+    {
+        if (token == tokens.Length) return true;
+        if (tokens[token] == "*")
+        {
+            for (var skip = 0; skip <= MaxWildcardWords && at + skip <= words.Count; skip++)
+                if (MatchesAt(words, at + skip, tokens, token + 1)) return true;
+            return false;
+        }
+        return at < words.Count
+            && string.Equals(words[at], tokens[token], StringComparison.OrdinalIgnoreCase)
+            && MatchesAt(words, at + 1, tokens, token + 1);
     }
 
     private IReadOnlyList<(string, float[])> BuildIndex()
