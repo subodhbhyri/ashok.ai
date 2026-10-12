@@ -1,0 +1,39 @@
+id: change-text-size
+title: Make the text bigger
+scope: system
+os: [win11]
+examples:
+  - make the text bigger
+  - the letters are too small
+  - bigger font
+  - make the font larger
+  - increase the text size
+  - the words on my screen are too small to read
+steps:
+  - id: s1
+    say: Press the Windows key and the letter I together to open Settings.
+    action: pressKeys
+    keys: Win+I
+    doneWhen: { kind: elementVisible, target: { role: ListItem, name: Accessibility } }
+  - id: s2
+    say: Click Accessibility on the left.
+    action: click
+    target: { role: ListItem, name: Accessibility }
+    doneWhen: { kind: elementVisible, target: { role: ListItem, name: Text size } }
+  - id: s3
+    say: Click Text size.
+    action: click
+    target: { role: ListItem, name: Text size }
+    doneWhen:
+      kind: elementVisible
+      target: { role: Slider, name: Text size, automationId: SystemSettings_EaseOfAccess_Experience_TextScalingDesktop_Slider }
+  - id: s4
+    say: Drag the slider to the right to make the words bigger. The sample words above it change as you move it. Press Done when they look big enough.
+    action: click
+    target: { role: Slider, name: Text size, automationId: SystemSettings_EaseOfAccess_Experience_TextScalingDesktop_Slider }
+    doneWhen: { kind: userConfirms }
+  - id: s5
+    say: Click Apply. The screen may flicker for a moment. You can change it back the same way.
+    action: click
+    target: { role: Button, name: Apply, automationId: SystemSettings_EaseOfAccess_Experience_TextScalingDesktop_ButtonRemove }
+    doneWhen: { kind: userConfirms }

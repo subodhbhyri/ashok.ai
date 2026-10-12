@@ -7,7 +7,15 @@ public enum MatchKind { AutomationId, ExactName, PartialName, FuzzyName, RoleFal
 
 /// <param name="Index">Position in the candidate list, i.e. document order.</param>
 /// <param name="RoleExact">False when the element only has a compatible role (a ListItem standing in for a Button).</param>
-public sealed record Resolved(UiElement Element, double Score, MatchKind How, int Index, bool RoleExact = true);
+public sealed record Resolved(UiElement Element, double Score, MatchKind How, int Index, bool RoleExact = true)
+{
+    /// <summary>
+    /// Whether this match is certain enough to put a ring on: the automation id matched, or the role is exact and
+    /// the name is the target's own (or the same name once a "(pinned)" suffix or "Start of ... - " prefix is
+    /// dropped). A fuzzy name or a compatible role is a guess, and a ring on a guess points the wrong way.
+    /// </summary>
+    public bool PlacesRing => How == MatchKind.AutomationId || (RoleExact && How is MatchKind.ExactName or MatchKind.PartialName);
+}
 
 public sealed record ResolveResult(IReadOnlyList<Resolved> Matches)
 {
@@ -122,6 +130,10 @@ public sealed class TargetResolver
         System.Text.RegularExpressions.Regex.Replace(s, @"\([^)]*\)", " ");
 
     public Resolved? Best(Target target, IReadOnlyList<UiElement> candidates) => Resolve(target, candidates).Best;
+
+    /// <summary>The best match that is certain enough to put a ring on, or null. Role fallbacks never qualify.</summary>
+    public Resolved? BestForRing(Target target, IReadOnlyList<UiElement> candidates) =>
+        Resolve(target, candidates).Matches.FirstOrDefault(m => m.PlacesRing);
 
     /// <summary>
     /// The best match whose role is exactly the target role. For deciding what is ON SCREEN (a doneWhen), a

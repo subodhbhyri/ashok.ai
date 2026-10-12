@@ -54,11 +54,24 @@ public sealed class EmbeddingIntentMatcher : IIntentMatcher
         if (string.IsNullOrWhiteSpace(question)) return [];
 
         var vector = _embedder.Embed(question);
+        var avoided = AvoidedPlaybooks(question);
         return _index.Value
+            .Where(entry => !avoided.Contains(entry.PlaybookId))
             .GroupBy(entry => entry.PlaybookId)
             .Select(group => new PlaybookScore(group.Key, group.Max(entry => Vectors.Dot(vector, entry.Vector))))
             .OrderByDescending(s => s.Score)
             .ToList();
+    }
+
+    /// <summary>Playbooks the question asks the opposite of ("turn OFF bluetooth"): they are skipped, not just ranked lower.</summary>
+    private HashSet<string> AvoidedPlaybooks(string question)
+    {
+        var words = System.Text.RegularExpressions.Regex.Matches(question, @"[\p{L}\p{N}']+")
+            .Select(m => m.Value).ToHashSet(StringComparer.OrdinalIgnoreCase);
+        return _playbooks
+            .Where(p => p.AvoidWords is { } avoid && avoid.Any(words.Contains))
+            .Select(p => p.Id)
+            .ToHashSet();
     }
 
     private IReadOnlyList<(string, float[])> BuildIndex()

@@ -10,7 +10,7 @@ public class PlaybookFileTests
 {
     private static readonly string[] ExpectedIds =
     [
-        "bluetooth-on", "change-display-scaling", "change-volume", "connect-wifi", "edit-path",
+        "bluetooth-on", "change-display-scaling", "change-text-size", "change-volume", "connect-wifi", "edit-path",
         "find-downloads", "open-downloaded-file", "pair-device", "take-screenshot", "uninstall-app",
     ];
 
@@ -28,7 +28,7 @@ public class PlaybookFileTests
     private static Playbook Load(string id) => PlaybookLoader.Load(Path.Combine(PlaybooksDir, $"{id}.yaml"));
 
     [Fact]
-    public void Exactly_the_ten_mvp_playbooks_exist_for_windows_11()
+    public void Exactly_the_eleven_playbooks_exist_for_windows_11()
     {
         var store = PlaybookStore.LoadDirectory(PlaybooksDir, "win11");
 

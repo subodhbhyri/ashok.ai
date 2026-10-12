@@ -1,6 +1,7 @@
 id: pair-device
 title: Pair a Bluetooth device
 scope: system
+avoidWords: [off, disable, disconnect, stop, unpair, remove]
 os: [win11]
 examples:
   - pair a bluetooth device

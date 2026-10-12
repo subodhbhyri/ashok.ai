@@ -244,7 +244,7 @@ public class PlaybookEndToEndTests(ITestOutputHelper output) : IDisposable
         foreach (var id in new[]
                  {
                      "find-downloads", "open-downloaded-file", "take-screenshot", "change-volume", "connect-wifi", "bluetooth-on",
-                     "pair-device", "change-display-scaling", "uninstall-app", "edit-path",
+                     "pair-device", "change-display-scaling", "change-text-size", "uninstall-app", "edit-path",
                  })
             data.Add(id);
         return data;
@@ -460,8 +460,15 @@ public class PlaybookEndToEndTests(ITestOutputHelper output) : IDisposable
         // Scrolls Scale into view and stops before opening it.
         "change-display-scaling" => new("s5", new()
         {
-            ["s4"] = c => c.User.FindById("SystemSettings_Display_Scaling_ItemSizeOverride_ComboBox")?.Patterns.ScrollItem.PatternOrDefault?.ScrollIntoView(),
+            ["s4"] = c =>
+            {
+                c.User.FindById("SystemSettings_Display_Scaling_ItemSizeOverride_ComboBox")?.Patterns.ScrollItem.PatternOrDefault?.ScrollIntoView();
+                c.ConfirmStep();
+            },
         }),
+
+        // The slider and Apply are pointed at but never touched (Apply would change the real text size).
+        "change-text-size" => new("s5", new() { ["s4"] = c => c.ConfirmStep() }),
 
         // Opens the first app's menu and stops before Uninstall.
         "uninstall-app" => new("s5", new()

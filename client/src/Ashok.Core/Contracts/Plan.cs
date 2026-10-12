@@ -36,7 +36,8 @@ public sealed record Playbook(
     IReadOnlyList<string> Os,
     IReadOnlyList<string> Examples,
     IReadOnlyList<PlanStep> Steps,
-    PlaybookScope Scope = PlaybookScope.System);
+    PlaybookScope Scope = PlaybookScope.System,
+    IReadOnlyList<string>? AvoidWords = null);
 
 /// <summary>System playbooks are about Windows itself; app playbooks about one application.</summary>
 public enum PlaybookScope { System, App }

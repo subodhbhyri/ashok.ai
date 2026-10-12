@@ -50,6 +50,8 @@ public sealed class GuidanceSession(
 
     public const string DoneMessage = "All done. Well done!";
 
+    public const string AlreadyDoneMessage = "It looks like that's already done.";
+
     private sealed class StepRun(DateTimeOffset startedAt)
     {
         public ForegroundState? Start;
@@ -168,6 +170,7 @@ public sealed class GuidanceSession(
             }
 
             // A step can already be satisfied (the user got ahead of us), so keep advancing while it is.
+            var completedThisTick = 0;
             for (var guard = 0; guard <= _steps.Count; guard++)
             {
                 var step = _steps[_stepIndex];
@@ -181,10 +184,12 @@ public sealed class GuidanceSession(
                 _history.Add(new StepRecord(step.Id, step.Say, true));
                 _knownProcesses.Add(screen.Foreground.Process);
                 _lastProgress = now;
+                completedThisTick++;
 
                 if (_stepIndex + 1 >= _steps.Count)
                 {
-                    FinishLocked(SessionPhase.Done, DoneMessage);
+                    // Two or more steps at once, including the last, means the person had already done it.
+                    FinishLocked(SessionPhase.Done, completedThisTick >= 2 ? AlreadyDoneMessage : DoneMessage);
                     return;
                 }
 
@@ -339,7 +344,7 @@ public sealed class GuidanceSession(
             return null;
         }
 
-        var found = resolver.Best(target, screen.Candidates);
+        var found = resolver.BestForRing(target, screen.Candidates);
         if (found is null)
         {
             HideRingLocked();

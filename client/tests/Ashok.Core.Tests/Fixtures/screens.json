@@ -9,7 +9,20 @@
       { "role": "ListItem", "name": "Personalization" },
       { "role": "ListItem", "name": "Apps" },
       { "role": "ListItem", "name": "Accounts" },
+      { "role": "ListItem", "name": "Accessibility" },
       { "role": "Edit", "name": "Search box, Find a setting", "automationId": "CommandSearchTextBox" }
+    ],
+    "accessibility-page": [
+      { "role": "Button", "name": "Accessibility" },
+      { "role": "ListItem", "name": "Text size" },
+      { "role": "ListItem", "name": "Visual effects" },
+      { "role": "ListItem", "name": "Magnifier" }
+    ],
+    "text-size-page": [
+      { "role": "Button", "name": "Accessibility" },
+      { "role": "Button", "name": "Text size" },
+      { "role": "Slider", "name": "Text size", "automationId": "SystemSettings_EaseOfAccess_Experience_TextScalingDesktop_Slider" },
+      { "role": "Button", "name": "Apply", "automationId": "SystemSettings_EaseOfAccess_Experience_TextScalingDesktop_ButtonRemove" }
     ],
     "bluetooth-page": [
       { "role": "ListItem", "name": "Bluetooth & devices" },
@@ -61,6 +74,8 @@
       { "role": "Text", "name": "Volume" }
     ],
     "display-page": [
+      { "role": "Button", "name": "System" },
+      { "role": "Button", "name": "Display" },
       { "role": "Button", "name": "Detect", "automationId": "SystemSettings_Display_Detect_Button" },
       { "role": "ComboBox", "name": "Multiple displays", "automationId": "SystemSettings_Display_Duplicate_ComboBox" },
       { "role": "Button", "name": "Identify", "automationId": "SystemSettings_Display_MonitorActions_Identify_Button" }

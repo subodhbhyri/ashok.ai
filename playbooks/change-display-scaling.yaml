@@ -1,13 +1,13 @@
 id: change-display-scaling
-title: Make text and apps bigger or smaller
+title: Make everything on the screen bigger or smaller
 scope: system
 os: [win11]
 examples:
   - make everything on the screen bigger
-  - the text is too small
   - change display scaling
-  - make the screen text larger
   - how do I zoom the whole screen
+  - change the scale of my display
+  - make apps and icons bigger
 steps:
   - id: s1
     say: Press the Windows key and the letter I together to open Settings.
@@ -23,15 +23,11 @@ steps:
     say: Click Display.
     action: click
     target: { role: ListItem, name: Display }
-    doneWhen:
-      kind: elementVisible
-      target: { role: Button, name: Detect, automationId: SystemSettings_Display_Detect_Button }
+    doneWhen: { kind: elementVisible, target: { role: Button, name: Display } }
   - id: s4
-    say: Scroll down until you see Scale.
+    say: Scroll down until you see Scale. Press Done when you can see it.
     action: observe
-    doneWhen:
-      kind: elementVisible
-      target: { role: ComboBox, name: Scale, automationId: SystemSettings_Display_Scaling_ItemSizeOverride_ComboBox }
+    doneWhen: { kind: userConfirms }
   - id: s5
     say: Click the Scale box and choose a bigger percentage. The screen changes straight away, and you can change it back.
     action: click
