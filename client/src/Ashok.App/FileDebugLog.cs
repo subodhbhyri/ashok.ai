@@ -15,9 +15,9 @@ public sealed class FileDebugLog(string? path = null) : IDebugLog
 
     private readonly object _gate = new();
 
-    public void Verdict(DateTimeOffset at, OffPlanVerdict verdict, string? reason, string process, string stepId, double secondsIntoStep) =>
+    public void Verdict(DateTimeOffset at, OffPlanVerdict verdict, string? reason, string process, string stepId, double secondsIntoStep, string action = "replan") =>
         Append(string.Create(CultureInfo.InvariantCulture,
-            $"{at:O} verdict={verdict} reason={reason ?? "-"} process={process} step={stepId} secs={secondsIntoStep:F1}"));
+            $"{at:O} verdict={verdict} reason={reason ?? "-"} process={process} step={stepId} secs={secondsIntoStep:F1} action={action}"));
 
     public void AutomationReset(DateTimeOffset at, string process, int hresult) =>
         Append(string.Create(CultureInfo.InvariantCulture, $"{at:O} automation-reset process={process} hresult=0x{hresult:X8}"));

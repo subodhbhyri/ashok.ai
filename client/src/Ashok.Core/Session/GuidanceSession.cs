@@ -45,6 +45,9 @@ public sealed class GuidanceSession(
     /// </summary>
     public const double AppWindowMinScore = 0.9;
 
+    /// <summary>How long after a step starts that a new foreground window is taken to be the previous step's result.</summary>
+    public static readonly TimeSpan NewStepGrace = TimeSpan.FromSeconds(10);
+
     public const string DoneMessage = "All done. Well done!";
 
     private sealed class StepRun(DateTimeOffset startedAt)
@@ -53,6 +56,7 @@ public sealed class GuidanceSession(
         public DateTimeOffset StartedAt { get; } = startedAt;
         public bool Seen;
         public bool Confirmed;
+        public bool Nudged;
     }
 
     private readonly object _gate = new();
@@ -191,16 +195,33 @@ public sealed class GuidanceSession(
                 Set(State with { StepIndex = _stepIndex });
             }
 
+            // A window that opens right after a step was completed is that step's result, not somewhere else.
+            if (_stepIndex > 0 && now - _run.StartedAt <= NewStepGrace)
+                _knownProcesses.Add(screen.Foreground.Process);
+
             var current = _steps[_stepIndex];
             if (announce) AnnounceLocked(current);
             var targetOnScreen = UpdateRingLocked(current, screen);
 
             verdict = offPlan.Check(new OffPlanContext(
                 screen.Foreground, _knownProcesses, current, _run.StartedAt, _lastProgress, now, targetOnScreen));
+
+            // First time stuck on a step that has a ring on screen: a gentle repeat is better than a new plan.
+            if (verdict == OffPlanVerdict.Stuck && targetOnScreen == true && !_run.Nudged)
+            {
+                debugLog?.Verdict(now, verdict, offPlan.LastReason, screen.Foreground.Process, current.Id,
+                    (now - _run.StartedAt).TotalSeconds, "nudge");
+                _run.Nudged = true;
+                offPlan.Reset(now);
+                AnnounceLocked(current, "No rush. ");
+                return;
+            }
+
             if (verdict != OffPlanVerdict.OnPlan)
+            {
                 debugLog?.Verdict(now, verdict, offPlan.LastReason, screen.Foreground.Process, current.Id, (now - _run.StartedAt).TotalSeconds);
-            if (verdict != OffPlanVerdict.OnPlan)
                 _knownProcesses.Add(screen.Foreground.Process); // do not trigger again for the same window mid-replan
+            }
         }
 
         if (verdict != OffPlanVerdict.OnPlan)
@@ -295,15 +316,16 @@ public sealed class GuidanceSession(
         AnnounceLocked(steps[0]);
     }
 
-    private void AnnounceLocked(PlanStep step)
+    private void AnnounceLocked(PlanStep step, string prefix = "")
     {
         var steps = _steps!;
         var number = _stepIndex;
         var needsConfirm = step.DoneWhen.Kind == DoneKind.UserConfirms;
         dispatcher.Post(() =>
         {
-            view.ShowStep(new StepView(step.Say, number, steps.Count, needsConfirm));
-            _ = speaker.SpeakAsync(step.Say);
+            var say = prefix + step.Say;
+            view.ShowStep(new StepView(say, number, steps.Count, needsConfirm));
+            _ = speaker.SpeakAsync(say);
         });
     }
 

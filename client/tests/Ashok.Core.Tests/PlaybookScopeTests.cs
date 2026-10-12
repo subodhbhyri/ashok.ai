@@ -101,7 +101,7 @@ public class PlaybookScopeTests
         public void Routed(DateTimeOffset at, string? process, string? playbookId, double? score, string path) =>
             Lines.Add((process, playbookId, score, path));
 
-        public void Verdict(DateTimeOffset at, OffPlanVerdict verdict, string? reason, string process, string stepId, double secondsIntoStep)
+        public void Verdict(DateTimeOffset at, OffPlanVerdict verdict, string? reason, string process, string stepId, double secondsIntoStep, string action = "replan")
         {
         }
 
@@ -140,7 +140,7 @@ public class PlaybookScopeTests
         {
         }
 
-        public void Verdict(DateTimeOffset at, OffPlanVerdict verdict, string? reason, string process, string stepId, double secondsIntoStep) =>
+        public void Verdict(DateTimeOffset at, OffPlanVerdict verdict, string? reason, string process, string stepId, double secondsIntoStep, string action = "replan") =>
             Lines.Add((verdict, reason, process, stepId, secondsIntoStep));
     }
 

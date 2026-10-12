@@ -50,8 +50,8 @@ internal sealed class TestDebugLog(ITestOutputHelper output) : IDebugLog
     public void AutomationReset(DateTimeOffset at, string process, int hresult) =>
         output.WriteLine($"    LOG automation-reset process={process} hresult=0x{hresult:X8}");
 
-    public void Verdict(DateTimeOffset at, OffPlanVerdict verdict, string? reason, string process, string stepId, double secondsIntoStep) =>
-        output.WriteLine($"    LOG verdict={verdict} reason={reason ?? "-"} process={process} step={stepId} secs={secondsIntoStep:F1}");
+    public void Verdict(DateTimeOffset at, OffPlanVerdict verdict, string? reason, string process, string stepId, double secondsIntoStep, string action = "replan") =>
+        output.WriteLine($"    LOG verdict={verdict} reason={reason ?? "-"} process={process} step={stepId} secs={secondsIntoStep:F1} action={action}");
 }
 
 internal sealed class InlineUi : IUiDispatcher
