@@ -26,6 +26,8 @@ public class HeuristicOffPlanDetectorTests
         public DateTimeOffset StepStart = T0;
         public PlanStep Step = step;
 
+        public HeuristicOffPlanDetector Detector() => detector;
+
         public OffPlanVerdict At(TimeSpan after, string process = "SystemSettings", string title = "Settings", long handle = 1, bool? target = true)
         {
             Now = T0 + after;
@@ -218,6 +220,45 @@ public class HeuristicOffPlanDetectorTests
         c.StepStart = T0 + S(2);
 
         Assert.Equal(OffPlanVerdict.OnPlan, c.At(S(12), target: false));
+    }
+
+    [Fact]
+    public void LastReason_names_why_the_last_verdict_fired()
+    {
+        var (_, c) = Start();
+        Assert.Null(c.Detector().LastReason);
+        c.At(S(0));
+        Assert.Equal(OffPlanVerdict.OffPlan, Away(c, S(1)));
+        Assert.Equal("other-app", c.Detector().LastReason);
+    }
+
+    [Fact]
+    public void LastReason_target_lost_and_stuck()
+    {
+        var (_, lost) = Start();
+        lost.At(S(0), target: true);
+        lost.At(S(1), target: false);
+        Assert.Equal(OffPlanVerdict.OffPlan, lost.At(S(9.25), target: false));
+        Assert.Equal("target-lost", lost.Detector().LastReason);
+
+        var (_, stuck) = Start();
+        stuck.At(S(0));
+        Assert.Equal(OffPlanVerdict.Stuck, stuck.At(S(40)));
+        Assert.Equal("stuck", stuck.Detector().LastReason);
+    }
+
+    [Fact]
+    public void LastReason_is_not_set_by_a_verdict_the_budget_suppressed()
+    {
+        var (detector, c) = Start();
+        c.At(S(0));
+        Away(c, S(1));
+        detector.Reset(c.Now);
+        c.StepStart = c.Now;
+        c.At(c.Now - T0);
+        Away(c, S(6), handle: 9); // too soon after the last replan: suppressed
+
+        Assert.Equal("other-app", detector.LastReason);
     }
 
     // Puts another app in front long enough to count, from the given time.

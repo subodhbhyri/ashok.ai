@@ -60,6 +60,9 @@ public sealed class HeuristicOffPlanDetector : IOffPlanDetector
 
     private readonly Queue<DateTimeOffset> _replans = new();
 
+    /// <summary>"other-app", "target-lost" or "stuck": why the last OffPlan or Stuck verdict was returned.</summary>
+    public string? LastReason { get; private set; }
+
     private long _handle;
     private string? _title;
     private DateTimeOffset _activityAt;
@@ -103,7 +106,7 @@ public sealed class HeuristicOffPlanDetector : IOffPlanDetector
         }
 
         if (_unexpectedSince is { } away && now - away >= UnexpectedAppFor)
-            return Spend(OffPlanVerdict.OffPlan, now);
+            return Spend(OffPlanVerdict.OffPlan, "other-app", now);
 
         // 2. Right app, but they left the page the step is about.
         if (expected)
@@ -120,7 +123,7 @@ public sealed class HeuristicOffPlanDetector : IOffPlanDetector
                     {
                         _targetSeen = false; // look for it afresh rather than firing again straight away
                         _targetLostSince = null;
-                        return Spend(OffPlanVerdict.OffPlan, now);
+                        return Spend(OffPlanVerdict.OffPlan, "target-lost", now);
                     }
                     break;
             }
@@ -131,7 +134,7 @@ public sealed class HeuristicOffPlanDetector : IOffPlanDetector
         if (now - idleSince >= StuckLimit(context))
         {
             _activityAt = now; // a full new wait before asking again, whatever the budget says
-            return Spend(OffPlanVerdict.Stuck, now);
+            return Spend(OffPlanVerdict.Stuck, "stuck", now);
         }
 
         return OffPlanVerdict.OnPlan;
@@ -146,7 +149,7 @@ public sealed class HeuristicOffPlanDetector : IOffPlanDetector
         return context.TargetOnScreen == true ? StuckWithRing : StuckWithoutRing;
     }
 
-    private OffPlanVerdict Spend(OffPlanVerdict verdict, DateTimeOffset now)
+    private OffPlanVerdict Spend(OffPlanVerdict verdict, string reason, DateTimeOffset now)
     {
         while (_replans.Count > 0 && now - _replans.Peek() >= ReplanWindow) _replans.Dequeue();
 
@@ -154,6 +157,7 @@ public sealed class HeuristicOffPlanDetector : IOffPlanDetector
         if (tooSoon || _replans.Count >= MaxReplansPerWindow) return OffPlanVerdict.OnPlan;
 
         _replans.Enqueue(now);
+        LastReason = reason;
         return verdict;
     }
 }

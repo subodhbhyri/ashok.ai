@@ -198,6 +198,8 @@ public sealed class GuidanceSession(
             verdict = offPlan.Check(new OffPlanContext(
                 screen.Foreground, _knownProcesses, current, _run.StartedAt, _lastProgress, now, targetOnScreen));
             if (verdict != OffPlanVerdict.OnPlan)
+                debugLog?.Verdict(now, verdict, offPlan.LastReason, screen.Foreground.Process, current.Id, (now - _run.StartedAt).TotalSeconds);
+            if (verdict != OffPlanVerdict.OnPlan)
                 _knownProcesses.Add(screen.Foreground.Process); // do not trigger again for the same window mid-replan
         }
 

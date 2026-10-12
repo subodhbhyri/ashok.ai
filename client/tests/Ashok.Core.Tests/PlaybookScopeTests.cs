@@ -100,6 +100,10 @@ public class PlaybookScopeTests
 
         public void Routed(DateTimeOffset at, string? process, string? playbookId, double? score, string path) =>
             Lines.Add((process, playbookId, score, path));
+
+        public void Verdict(DateTimeOffset at, OffPlanVerdict verdict, string? reason, string process, string stepId, double secondsIntoStep)
+        {
+        }
     }
 
     [Fact]
@@ -118,6 +122,37 @@ public class PlaybookScopeTests
         Assert.Equal(
             [("notepad", "change-display-scaling", 0.88, "planner"), ("explorer", "change-display-scaling", 0.88, "playbook"), ("notepad", null, null, "planner")],
             log.Lines);
+    }
+
+    private sealed class VerdictLog : IDebugLog
+    {
+        public List<(OffPlanVerdict Verdict, string? Reason, string Process, string Step, double Secs)> Lines { get; } = [];
+
+        public void Routed(DateTimeOffset at, string? process, string? playbookId, double? score, string path)
+        {
+        }
+
+        public void Verdict(DateTimeOffset at, OffPlanVerdict verdict, string? reason, string process, string stepId, double secondsIntoStep) =>
+            Lines.Add((verdict, reason, process, stepId, secondsIntoStep));
+    }
+
+    [Fact]
+    public async Task ANonOnPlanVerdict_IsLoggedWithReasonProcessStepAndSeconds()
+    {
+        var log = new VerdictLog();
+        var book = Book("x", Step("s1", Visible("Button", "Never appears")));
+        var rig = new Rig([book], new FakeMatcher((Q, "x")), detector: new HeuristicOffPlanDetector(), debugLog: log);
+
+        await rig.Session.AskAsync(Q, 0);
+        await rig.Tick(Rig.Screen("SystemSettings", "Settings", 1));
+        Assert.Empty(log.Lines);
+
+        rig.Time.Advance(TimeSpan.FromSeconds(26)); // a step with nothing to point at: stuck after 25 s
+        await rig.Tick(Rig.Screen("SystemSettings", "Settings", 1));
+
+        var line = Assert.Single(log.Lines);
+        Assert.Equal((OffPlanVerdict.Stuck, "stuck", "SystemSettings", "s1"), (line.Verdict, line.Reason, line.Process, line.Step));
+        Assert.InRange(line.Secs, 25.9, 26.1);
     }
 
     [Fact]

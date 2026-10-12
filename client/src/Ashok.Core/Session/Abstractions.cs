@@ -45,11 +45,18 @@ public interface IDebugLog
 {
     /// <param name="process">Foreground process of the captured window, or null when no capture was needed.</param>
     void Routed(DateTimeOffset at, string? process, string? playbookId, double? score, string path);
+
+    /// <summary>A replan verdict during guidance. Only ids, names and numbers: never screen contents.</summary>
+    void Verdict(DateTimeOffset at, OffPlanVerdict verdict, string? reason, string process, string stepId, double secondsIntoStep);
 }
 
 public sealed class NullDebugLog : IDebugLog
 {
     public void Routed(DateTimeOffset at, string? process, string? playbookId, double? score, string path)
+    {
+    }
+
+    public void Verdict(DateTimeOffset at, OffPlanVerdict verdict, string? reason, string process, string stepId, double secondsIntoStep)
     {
     }
 }
@@ -124,4 +131,7 @@ public interface IOffPlanDetector
     void Reset(DateTimeOffset now);
 
     OffPlanVerdict Check(OffPlanContext context);
+
+    /// <summary>Why the last OffPlan or Stuck verdict was returned, for the debug log. Detectors that do not track it return null.</summary>
+    string? LastReason => null;
 }
