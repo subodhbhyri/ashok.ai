@@ -41,6 +41,19 @@ internal sealed class RecordingView : ISessionView
     public void Clear() { }
 }
 
+/// <summary>Writes the session's routing and verdict lines into the test output so a failed run shows them.</summary>
+internal sealed class TestDebugLog(ITestOutputHelper output) : IDebugLog
+{
+    public void Routed(DateTimeOffset at, string? process, string? playbookId, double? score, string path) =>
+        output.WriteLine($"    LOG routed process={process ?? "-"} playbook={playbookId ?? "-"} path={path}");
+
+    public void AutomationReset(DateTimeOffset at, string process, int hresult) =>
+        output.WriteLine($"    LOG automation-reset process={process} hresult=0x{hresult:X8}");
+
+    public void Verdict(DateTimeOffset at, OffPlanVerdict verdict, string? reason, string process, string stepId, double secondsIntoStep) =>
+        output.WriteLine($"    LOG verdict={verdict} reason={reason ?? "-"} process={process} step={stepId} secs={secondsIntoStep:F1}");
+}
+
 internal sealed class InlineUi : IUiDispatcher
 {
     public void Post(Action action) => action();
@@ -237,6 +250,13 @@ public class PlaybookEndToEndTests(ITestOutputHelper output) : IDisposable
         return data;
     }
 
+    // Type, HRESULT, message and the first stack frames, so a recurring capture error can be traced to its source.
+    private static string DescribeError(Exception e)
+    {
+        var frames = (e.StackTrace ?? "").Split((char)10).Take(3).Select(l => l.Trim().Split(" in ")[0]);
+        return $"    runner error: {e.GetType().Name} 0x{e.HResult:X8} {e.Message.Trim()} @ {string.Join(" < ", frames)}";
+    }
+
     [Theory]
     [MemberData(nameof(Ids))]
     public async Task Playbook_runs_end_to_end_offline(string id)
@@ -251,15 +271,16 @@ public class PlaybookEndToEndTests(ITestOutputHelper output) : IDisposable
         var planner = new PlannerTripwire();
         var script = ScriptFor(id, user);
 
-        using var source = new FlaUiElementSource();
+        var log = new TestDebugLog(output);
+        using var source = new FlaUiElementSource(log);
         var screens = new CandidateSource(desk, source);
         var session = new GuidanceSession(
             new EmbeddingIntentMatcher(new HashingEmbedder(), store.All, threshold: 0.35),
-            store, planner, new NaiveOffPlanDetector(), resolver, new DoneEvaluator(resolver),
-            overlay, new SilentSpeaker(), new RecordingView(), new InlineUi(), TimeProvider.System, "no-such-process");
-        using var focus = new FocusedElementProbe();
-        using var runner = new SessionRunner(session, screens, focus, new PollingUiWatcher(TimeSpan.FromMilliseconds(150)));
-        runner.Error += e => output.WriteLine($"    runner error: {e.Message}");
+            store, planner, new HeuristicOffPlanDetector(), resolver, new DoneEvaluator(resolver),
+            overlay, new SilentSpeaker(), new RecordingView(), new InlineUi(), TimeProvider.System, "no-such-process", snapshots: null, debugLog: log);
+        using var focus = new FocusedElementProbe(log);
+        using var runner = new SessionRunner(session, screens, focus, new WinEventWatcher());
+        runner.Error += e => output.WriteLine(DescribeError(e));
         _cleanup.Add(() => { foreach (var h in user.Opened) TestNative.Close(h); });
 
         var clock = Stopwatch.StartNew();

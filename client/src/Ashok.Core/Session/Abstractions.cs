@@ -45,11 +45,25 @@ public interface IDebugLog
 {
     /// <param name="process">Foreground process of the captured window, or null when no capture was needed.</param>
     void Routed(DateTimeOffset at, string? process, string? playbookId, double? score, string path);
+
+    /// <summary>A replan verdict during guidance. Only ids, names and numbers: never screen contents.</summary>
+    void Verdict(DateTimeOffset at, OffPlanVerdict verdict, string? reason, string process, string stepId, double secondsIntoStep);
+
+    /// <summary>UI Automation was disposed and recreated after repeated bad reads. Process name and HRESULT only.</summary>
+    void AutomationReset(DateTimeOffset at, string process, int hresult);
 }
 
 public sealed class NullDebugLog : IDebugLog
 {
     public void Routed(DateTimeOffset at, string? process, string? playbookId, double? score, string path)
+    {
+    }
+
+    public void Verdict(DateTimeOffset at, OffPlanVerdict verdict, string? reason, string process, string stepId, double secondsIntoStep)
+    {
+    }
+
+    public void AutomationReset(DateTimeOffset at, string process, int hresult)
     {
     }
 }
@@ -112,16 +126,19 @@ public sealed record OffPlanContext(
     PlanStep Step,
     DateTimeOffset StepStartedAt,
     DateTimeOffset LastProgressAt,
-    DateTimeOffset Now);
+    DateTimeOffset Now,
+    bool? TargetOnScreen = null);
 
-// OPUS: off-plan and stuck heuristics (plan "Tricky parts", phases 3-4). Too eager feels naggy and burns
-// planner calls; too lax leaves the user lost. Decide what "unexpected foreground window" means (shell
-// surfaces such as Start and Search, dialogs of the same program, UAC), how long it must persist, what
-// counts as progress, and the stuck timeout. The session calls Reset when a guide or step begins and Check
-// on every tick; it already ignores Ashok's own windows. NaiveOffPlanDetector is the placeholder.
+/// <summary>
+/// The session calls Reset when a guide or step begins and Check on every tick; it already ignores Ashok's own windows.
+/// <see cref="OffPlanContext.TargetOnScreen"/> is null when the step has no target, otherwise whether the resolver found it.
+/// </summary>
 public interface IOffPlanDetector
 {
     void Reset(DateTimeOffset now);
 
     OffPlanVerdict Check(OffPlanContext context);
+
+    /// <summary>Why the last OffPlan or Stuck verdict was returned, for the debug log. Detectors that do not track it return null.</summary>
+    string? LastReason => null;
 }

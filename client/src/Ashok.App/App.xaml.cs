@@ -90,13 +90,14 @@ public partial class App : Application
         services.AddSingleton<IIntentMatcher>(sp => CreateMatcher(sp.GetRequiredService<IPlaybookStore>(), sp.GetRequiredService<TrayIcon>()));
         services.AddSingleton<IInstallTokenStore, FileInstallTokenStore>();
         services.AddSingleton<IPlanner>(sp => CreatePlanner(sp.GetRequiredService<IInstallTokenStore>()));
-        services.AddSingleton<IOffPlanDetector, NaiveOffPlanDetector>();
+        services.AddSingleton<IOffPlanDetector, HeuristicOffPlanDetector>();
         services.AddSingleton<TargetResolver>();
         services.AddSingleton<DoneEvaluator>();
+        services.AddSingleton<IDebugLog, FileDebugLog>();
         services.AddSingleton<IElementSource, FlaUiElementSource>();
         services.AddSingleton<ISnapshotSource, CandidateSource>();
         services.AddSingleton<IFocusProbe, FocusedElementProbe>();
-        services.AddSingleton<IUiWatcher>(_ => new PollingUiWatcher());
+        services.AddSingleton<IUiWatcher>(_ => new WinEventWatcher());
         services.AddSingleton(TimeProvider.System);
         services.AddSingleton(sp => new GuidanceSession(
             sp.GetRequiredService<IIntentMatcher>(), sp.GetRequiredService<IPlaybookStore>(),
@@ -105,7 +106,7 @@ public partial class App : Application
             sp.GetRequiredService<IOverlay>(), sp.GetRequiredService<ISpeaker>(),
             sp.GetRequiredService<ISessionView>(), sp.GetRequiredService<IUiDispatcher>(),
             sp.GetRequiredService<TimeProvider>(), Process.GetCurrentProcess().ProcessName,
-            sp.GetRequiredService<ISnapshotSource>(), new FileDebugLog()));
+            sp.GetRequiredService<ISnapshotSource>(), sp.GetRequiredService<IDebugLog>()));
         services.AddSingleton<SessionRunner>();
 
         return services.BuildServiceProvider();

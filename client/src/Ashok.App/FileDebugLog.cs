@@ -15,10 +15,22 @@ public sealed class FileDebugLog(string? path = null) : IDebugLog
 
     private readonly object _gate = new();
 
+    public void Verdict(DateTimeOffset at, OffPlanVerdict verdict, string? reason, string process, string stepId, double secondsIntoStep) =>
+        Append(string.Create(CultureInfo.InvariantCulture,
+            $"{at:O} verdict={verdict} reason={reason ?? "-"} process={process} step={stepId} secs={secondsIntoStep:F1}"));
+
+    public void AutomationReset(DateTimeOffset at, string process, int hresult) =>
+        Append(string.Create(CultureInfo.InvariantCulture, $"{at:O} automation-reset process={process} hresult=0x{hresult:X8}"));
+
     public void Routed(DateTimeOffset at, string? process, string? playbookId, double? score, string path)
     {
         var line = string.Create(CultureInfo.InvariantCulture,
             $"{at:O} process={process ?? "-"} playbook={playbookId ?? "-"} score={(score is { } s ? s.ToString("F3", CultureInfo.InvariantCulture) : "-")} path={path}");
+        Append(line);
+    }
+
+    private void Append(string line)
+    {
         try
         {
             lock (_gate)

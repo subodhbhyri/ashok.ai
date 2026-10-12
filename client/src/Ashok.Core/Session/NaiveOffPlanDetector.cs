@@ -1,7 +1,7 @@
 namespace Ashok.Core.Session;
 
-// OPUS: placeholder for the real off-plan and stuck heuristics; see IOffPlanDetector. This one only
-// implements the plan's one-line description: an unexpected foreground window, or 45 s with no progress.
+// A baseline for tests: the plan's one-line description, an unexpected foreground window or 45 s with no progress.
+// The app uses HeuristicOffPlanDetector.
 public sealed class NaiveOffPlanDetector : IOffPlanDetector
 {
     public static readonly TimeSpan StuckAfter = TimeSpan.FromSeconds(45);

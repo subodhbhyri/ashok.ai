@@ -1,4 +1,5 @@
 using Ashok.Core.Capture;
+using Ashok.Core.Session;
 using FlaUI.Core;
 using FlaUI.Core.Identifiers;
 using FlaUI.Core.AutomationElements;
@@ -22,9 +23,39 @@ public sealed class FlaUiElementSource : IElementSource, IDisposable
         ControlType.Text, // playbook doneWhen targets use Text; unnamed Text is skipped below
     ];
 
-    private readonly UIA3Automation _automation = new();
+    private UIA3Automation _automation = new();
+    private readonly CaptureRepairGuard _guard;
+    private readonly IDebugLog? _log;
+    private IntPtr _lastWindow;
 
+    public FlaUiElementSource(IDebugLog? log = null)
+    {
+        _log = log;
+        _guard = new CaptureRepairGuard(hresult => ResetAutomation(hresult, ProcessOf(_lastWindow)));
+    }
+
+    /// <summary>Bad reads are retried once; repeated ones recreate the automation object. All on the capture thread.</summary>
     public IReadOnlyList<RawElement> Read(IntPtr windowHandle)
+    {
+        _lastWindow = windowHandle;
+        return _guard.Run(windowHandle.ToInt64(), () => ReadOnce(windowHandle), list => list.Count == 0);
+    }
+
+    private void ResetAutomation(int hresult, string process)
+    {
+        var old = _automation;
+        _automation = new UIA3Automation();
+        try { old.Dispose(); } catch (Exception) { } // the old object is already broken; the new one is what matters
+        _log?.AutomationReset(DateTimeOffset.UtcNow, process, hresult);
+    }
+
+    internal static string ProcessOf(IntPtr window)
+    {
+        try { return window == IntPtr.Zero ? "-" : Win32ForegroundWindowProvider.Describe(window).Process; }
+        catch (Exception) { return "-"; }
+    }
+
+    private IReadOnlyList<RawElement> ReadOnce(IntPtr windowHandle)
     {
         var props = _automation.PropertyLibrary.Element;
         var cache = new CacheRequest

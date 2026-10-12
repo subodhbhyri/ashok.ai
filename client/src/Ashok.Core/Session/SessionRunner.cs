@@ -14,6 +14,7 @@ public sealed class SessionRunner : IDisposable
     private readonly object _watchGate = new();
     private IDisposable? _subscription;
     private int _busy;
+    private int _pending;
     private int _captures;
     private int _skipped;
 
@@ -55,6 +56,10 @@ public sealed class SessionRunner : IDisposable
     public void Signal()
     {
         if (_session.State.Phase != SessionPhase.Guiding) return;
+
+        // Remember the signal before looking at the busy flag: if a capture is running it re-checks this when it
+        // finishes, so a change that lands mid-capture is never lost, and any number of them cost one more capture.
+        Volatile.Write(ref _pending, 1);
         if (Interlocked.CompareExchange(ref _busy, 1, 0) != 0)
         {
             Interlocked.Increment(ref _skipped);
@@ -65,6 +70,7 @@ public sealed class SessionRunner : IDisposable
 
     private async Task CaptureAndTickAsync()
     {
+        Volatile.Write(ref _pending, 0);
         try
         {
             if (_session.State.Phase != SessionPhase.Guiding) return;
@@ -81,6 +87,7 @@ public sealed class SessionRunner : IDisposable
         finally
         {
             Volatile.Write(ref _busy, 0);
+            if (Volatile.Read(ref _pending) != 0) Signal();
         }
     }
 
