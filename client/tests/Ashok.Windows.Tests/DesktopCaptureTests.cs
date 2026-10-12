@@ -26,7 +26,7 @@ public class DesktopCaptureTests(ITestOutputHelper output) : IDisposable
     {
         var before = TestNative.TopLevelWindows().Select(w => w.Handle).ToHashSet();
         start();
-        var deadline = DateTime.UtcNow.AddSeconds(10);
+        var deadline = DateTime.UtcNow.AddSeconds(15); // the same wait the end-to-end runner gives a new window
         while (DateTime.UtcNow < deadline)
         {
             var found = TestNative.TopLevelWindows()
@@ -49,6 +49,8 @@ public class DesktopCaptureTests(ITestOutputHelper output) : IDisposable
             Restore(existing[0]);
             return existing[0];
         }
+        output.WriteLine("Window did not appear. Every top-level window right now:");
+        foreach (var line in TestNative.DescribeAllWindows()) output.WriteLine("  " + line);
         throw new TimeoutException("Window did not appear.");
     }
 

@@ -28,7 +28,7 @@ public sealed class CaptureRepairGuard(Action<int> reset, TimeSpan? retryDelay =
     /// <param name="once">One attempt at the read.</param>
     /// <param name="isEmpty">When set, an empty result counts as bad once this key has returned content.</param>
     /// <param name="swallow">After the retry also fails: return <paramref name="whenSwallowed"/> instead of rethrowing.</param>
-    public T Run<T>(long key, Func<T> once, Func<T, bool>? isEmpty = null, bool swallow = false, T whenSwallowed = default!)
+    public T Run<T>(long key, Func<T> once, Func<T, bool>? isEmpty = null, bool swallow = false, T? whenSwallowed = default)
     {
         var first = Attempt(key, once, isEmpty);
         if (!first.Bad) return Good(key, first.Value!, isEmpty);
@@ -46,7 +46,7 @@ public sealed class CaptureRepairGuard(Action<int> reset, TimeSpan? retryDelay =
         }
 
         if (second.Error is null) return second.Value!;
-        if (swallow) return whenSwallowed;
+        if (swallow) return whenSwallowed!;
         ExceptionDispatchInfo.Capture(second.Error).Throw();
         return default!;
     }
